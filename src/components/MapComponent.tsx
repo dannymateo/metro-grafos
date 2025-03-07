@@ -9,7 +9,7 @@ type MapComponentProps = {
     selectedRoute?: {
         path: string[];
         coordinates: [number, number][];
-    };
+    } | null;
     lines?: Record<string, {
         color: string;
         stations: string[];

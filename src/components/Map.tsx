@@ -15,7 +15,7 @@ type MapProps = {
             congestion: 'normal' | 'alta' | 'muy_alta';
             alerts?: string[];
         };
-    };
+    } | null;
     lines?: Record<string, {
         color: string;
         stations: string[];
@@ -47,28 +47,10 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
     }, []);
 
     const createIcon = (isSelected: boolean, isOrigin?: boolean, isDestination?: boolean) => {
-        const L = require('leaflet');
-        let color = '#1a73e8';
-        let size = 12;
-        let borderWidth = 2;
-        let shadowSize = 4;
-
-        if (isOrigin) {
-            color = '#22c55e';
-            size = 28;
-            borderWidth = 4;
-            shadowSize = 8;
-        } else if (isDestination) {
-            color = '#ef4444';
-            size = 28;
-            borderWidth = 4;
-            shadowSize = 8;
-        } else if (isSelected) {
-            color = '#6366f1';
-            size = 16;
-            borderWidth = 3;
-            shadowSize = 6;
-        }
+        const size = isOrigin || isDestination ? 28 : isSelected ? 16 : 12;
+        const color = isOrigin ? '#22c55e' : 
+                     isDestination ? '#ef4444' : 
+                     isSelected ? '#6366f1' : '#1a73e8';
 
         return L.divIcon({
             className: 'custom-station-icon',
@@ -77,9 +59,9 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
                     width: ${size}px;
                     height: ${size}px;
                     background-color: ${color};
-                    border: ${borderWidth}px solid white;
+                    border: ${isOrigin || isDestination ? 4 : 2}px solid white;
                     border-radius: 50%;
-                    box-shadow: 0 0 ${shadowSize}px rgba(0,0,0,0.3);
+                    box-shadow: 0 0 ${isOrigin || isDestination ? 8 : 4}px rgba(0,0,0,0.3);
                     transition: all 0.3s ease;
                 "></div>`,
             iconSize: [size, size],
@@ -144,9 +126,11 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
                 positions={selectedRoute.coordinates}
                 pathOptions={{
                     color: '#dc2626',
-                    ...getLineStyle(selectedRoute.status),
+                    weight: 5,
+                    opacity: 0.8,
                     lineCap: 'round',
-                    lineJoin: 'round'
+                    lineJoin: 'round',
+                    dashArray: selectedRoute.status?.congestion === 'muy_alta' ? '10,10' : undefined
                 }}
             />
         );
@@ -216,7 +200,7 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
                             <Marker 
                                 key={station} 
                                 position={coords}
-                                icon={createIcon(!!isSelected, !!isOrigin, !!isDestination)}
+                                icon={createIcon(!!isSelected, isOrigin, isDestination)}
                             >
                                 <Popup className="station-popup">
                                     <div className="font-semibold text-gray-900">{station}</div>

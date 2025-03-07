@@ -91,10 +91,11 @@ for linea, info in lineas.items():
 # Agregar conexiones entre líneas (transbordos)
 transbordos = [
     ("San Antonio", ["A", "B", "TA"]),
-    ("Acevedo", ["P", "L"]),
+    ("Acevedo", ["A", "K", "P"]),
     ("Santo Domingo", ["K", "L"]),
     ("Miraflores", ["TA", "M"]),
     ("Oriente", ["TA", "H"]),
+    ("San Javier", ["B", "J"])
 ]
 
 logger.info("Agregando conexiones de transbordo...")
@@ -295,19 +296,39 @@ class MetroSystem:
         plt.figure(figsize=(15, 10))
         pos = nx.spring_layout(self.metro_graph)
         
-        # Dibujar nodos
-        nx.draw_networkx_nodes(self.metro_graph, pos, 
-                             node_color='lightblue',
-                             node_size=500)
+        # Dibujar todas las aristas en gris claro
+        nx.draw_networkx_edges(self.metro_graph, pos, 
+                              edge_color='lightgray',
+                              width=1)
         
-        # Dibujar aristas
-        nx.draw_networkx_edges(self.metro_graph, pos)
+        # Dibujar nodos normales
+        nx.draw_networkx_nodes(self.metro_graph, pos, 
+                              node_color='lightblue',
+                              node_size=500)
+        
+        # Si hay una ruta actual, dibujarla en rojo
+        if self.current_route:
+            path_edges = list(zip(self.current_route[:-1], self.current_route[1:]))
+            nx.draw_networkx_edges(self.metro_graph, pos,
+                                 edgelist=path_edges,
+                                 edge_color='red',
+                                 width=2)
+            
+            # Resaltar nodos de origen y destino
+            nx.draw_networkx_nodes(self.metro_graph, pos,
+                                 nodelist=[self.current_route[0]],
+                                 node_color='green',
+                                 node_size=700)
+            nx.draw_networkx_nodes(self.metro_graph, pos,
+                                 nodelist=[self.current_route[-1]],
+                                 node_color='red',
+                                 node_size=700)
         
         # Agregar etiquetas
         nx.draw_networkx_labels(self.metro_graph, pos)
         
         # Guardar imagen
-        plt.savefig('metro_graph.png')
+        plt.savefig('metro_graph.png', bbox_inches='tight')
         plt.close()
         
         return 'metro_graph.png'
@@ -317,25 +338,25 @@ metro_system = MetroSystem()
 @app.get("/coordinates")
 async def get_coordinates():
     """Obtener las coordenadas de todas las estaciones"""
-    logger.debug("Enviando coordenadas de estaciones")
-    return {"coordinates": STATION_COORDINATES}
+    return {
+        "coordinates": STATION_COORDINATES
+    }
 
 @app.get("/stations")
 async def get_stations():
     """Obtener lista de estaciones y su estado"""
+    stations_list = list(metro_system.metro_graph.nodes())
     return {
-        "stations": list(metro_system.metro_graph.nodes()),
-        "status": {
-            station: status 
-            for station, status in metro_system.station_status.items()
-        }
+        "stations": stations_list,
+        "status": metro_system.station_status
     }
 
 @app.get("/lines")
 async def get_lines():
     """Obtener información sobre las líneas del metro"""
-    logger.debug("Enviando información de líneas")
-    return {"lines": lineas}
+    return {
+        "lines": lineas
+    }
 
 @app.get("/graph")
 async def get_graph():

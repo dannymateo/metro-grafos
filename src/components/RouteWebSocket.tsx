@@ -72,12 +72,26 @@ export default function RouteWebSocket() {
                 const linesData = await linesRes.json();
                 const coordsData = await coordsRes.json();
                 
-                setStations(stationsData.stations);
-                setCoordinates(coordsData.coordinates);
-                setLines(linesData.lines);
+                if (Array.isArray(stationsData.stations)) {
+                    setStations(stationsData.stations);
+                } else {
+                    console.error('Stations data is not an array:', stationsData);
+                    setStations([]);
+                }
+
+                if (coordsData.coordinates) {
+                    setCoordinates(coordsData.coordinates);
+                }
+
+                if (linesData.lines) {
+                    setLines(linesData.lines);
+                }
             } catch (error) {
                 console.error('Error fetching data:', error);
                 setError('Error al cargar las estaciones y líneas');
+                setStations([]);
+                setCoordinates({});
+                setLines({});
             }
         };
 
@@ -460,8 +474,6 @@ export default function RouteWebSocket() {
                                 coordinates={coordinates}
                                 selectedRoute={selectedHistoryRoute || currentRoute}
                                 lines={lines}
-                                weatherInfo={weatherInfo}
-                                zoneConditions={zoneConditions}
                             />
                         </CardBody>
                     </Card>
