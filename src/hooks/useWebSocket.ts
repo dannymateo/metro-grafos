@@ -10,7 +10,7 @@ export const useWebSocket = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const socket = new WebSocket('ws://localhost:8000/ws');
+        const socket = new WebSocket('ws://dasscoin.zapto.org/metro/ws');
         
         socket.onopen = () => {
             console.log('WebSocket Connected');

@@ -2,9 +2,9 @@ import { MetroLines } from '../types';
 
 export const fetchInitialData = async () => {
     const [stationsRes, coordsRes, linesRes] = await Promise.all([
-        fetch('http://localhost:8000/stations'),
-        fetch('http://localhost:8000/coordinates'),
-        fetch('http://localhost:8000/lines')
+        fetch('https://dasscoin.zapto.org/metro/stations'),
+        fetch('https://dasscoin.zapto.org/metro/coordinates'),
+        fetch('https://dasscoin.zapto.org/metro/lines')
     ]);
 
     const stationsData = await stationsRes.json();

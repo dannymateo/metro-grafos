@@ -204,7 +204,7 @@ export default function RouteWebSocket() {
                                 color="primary"
                                 variant="ghost"
                                 onClick={() => {
-                                    window.open(`http://localhost:8000/graph?t=${Date.now()}`, '_blank')
+                                    window.open(`https://dasscoin.zapto.org/graph?t=${Date.now()}`, '_blank')
                                 }}
                                 startContent={<Download className="w-4 h-4" />}
                             >
