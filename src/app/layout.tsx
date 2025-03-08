@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const geist = Geist({
-  subsets: ["latin"],
-  display: 'swap',
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body className={`${geist.className} min-h-screen bg-gradient-to-b from-blue-50 to-white`}>
+      <body className={`${inter.className} min-h-screen bg-gradient-to-b from-blue-50 to-white`}>
         <Providers>
           {children}
         </Providers>
