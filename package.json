@@ -13,7 +13,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "@nextui-org/react": "^2.2.9",
-    "framer-motion": "^10.18.0",
+    "framer-motion": "^12.4.10",
     "lucide-react": "^0.330.0",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1",
@@ -21,7 +21,9 @@
     "axios": "^1.8.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.0.2"
+    "tailwind-merge": "^3.0.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
