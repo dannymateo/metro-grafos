@@ -15,7 +15,9 @@ import {
     ModalContent,
     ModalHeader,
     ModalBody,
-    ModalFooter
+    ModalFooter,
+    Autocomplete,
+    AutocompleteItem
 } from "@nextui-org/react";
 import { MapPin, Navigation, Clock, Train, AlertCircle, Loader2, ArrowRight, GitCommit, Download, Crosshair } from 'lucide-react';
 import MapComponent from './MapComponent';
@@ -443,19 +445,20 @@ export default function RouteWebSocket() {
                         <CardBody className="space-y-6">
                             <div className="space-y-6">
                                 <div className="flex gap-2">
-                                    <Select
+                                    <Autocomplete
                                         label="Estación de origen"
                                         placeholder="¿Desde dónde?"
-                                        value={origin}
-                                        onChange={(e) => setOrigin(e.target.value)}
+                                        selectedKey={origin}
+                                        onSelectionChange={(key) => setOrigin(key as string)}
+                                        className="flex-1"
                                         startContent={<MapPin className="w-4 h-4" />}
                                     >
                                         {stations.map((station) => (
-                                            <SelectItem key={station} value={station}>
+                                            <AutocompleteItem key={station} value={station}>
                                                 {station}
-                                            </SelectItem>
+                                            </AutocompleteItem>
                                         ))}
-                                    </Select>
+                                    </Autocomplete>
                                     <Button
                                         isIconOnly
                                         color="primary"
@@ -467,32 +470,23 @@ export default function RouteWebSocket() {
                                     </Button>
                                 </div>
 
-                                <Select
+                                <Autocomplete
                                     label="Estación de destino"
                                     placeholder="¿A dónde vas?"
-                                    value={destination}
-                                    onChange={(e) => setDestination(e.target.value)}
+                                    selectedKey={destination}
+                                    onSelectionChange={(key) => setDestination(key as string)}
                                     startContent={
                                         <div className="flex items-center">
                                             <Navigation className="text-red-500 w-5 h-5" />
                                         </div>
                                     }
-                                    classNames={{
-                                        label: "text-blue-900 font-medium",
-                                        trigger: "bg-white/50 data-[hover=true]:bg-white/80 transition-all",
-                                        base: "max-w-full",
-                                    }}
                                 >
                                     {stations.map((station) => (
-                                        <SelectItem 
-                                            key={station} 
-                                            value={station}
-                                            className="data-[hover=true]:bg-blue-50"
-                                        >
+                                        <AutocompleteItem key={station} value={station}>
                                             {station}
-                                        </SelectItem>
+                                        </AutocompleteItem>
                                     ))}
-                                </Select>
+                                </Autocomplete>
                             </div>
 
                             <Button
@@ -590,7 +584,6 @@ export default function RouteWebSocket() {
                             )}
                         </CardBody>
                     </Card>
-
                     <Card className="lg:col-span-2 bg-white/70 backdrop-blur-md shadow-lg border-none overflow-hidden">
                         <CardBody className="p-0">
                             <MapComponent 
