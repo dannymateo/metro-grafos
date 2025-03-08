@@ -5,7 +5,13 @@ import dynamic from 'next/dynamic';
 
 import { Props } from './types';
 
-export default function MapComponent({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation, weatherConditions }: Props) {
+export default function MapComponent({ 
+    stations, 
+    coordinates, 
+    selectedRoute, 
+    lines, 
+    weatherConditions 
+}: Props) {
     const [isLoading, setIsLoading] = useState(true);
     
     const MapWithNoSSR = dynamic(() => import('@/components/Map/Map').then(mod => mod.default), {
@@ -35,8 +41,6 @@ export default function MapComponent({ stations, coordinates, selectedRoute, lin
             coordinates={coordinates} 
             selectedRoute={selectedRoute} 
             lines={lines}
-            userLocation={userLocation}
-            nearestStation={nearestStation}
             weatherConditions={weatherConditions}
         />
     );

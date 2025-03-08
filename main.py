@@ -254,14 +254,14 @@ class MetroSystem:
         distance = self.calculate_distance(coords1[0], coords1[1], coords2[0], coords2[1])
         base_speed = self.SPEEDS[self.LINE_TYPES.get(line, "metro")]
 
-        # Obtener condiciones climáticas de ambas estaciones
-        weather1 = self.weather_conditions.get(station1, {})
-        weather2 = self.weather_conditions.get(station2, {})
+        # Obtener condiciones climáticas actualizadas
+        weather1 = self.weather_conditions.get(station1, {'type': 'sunny'})
+        weather2 = self.weather_conditions.get(station2, {'type': 'sunny'})
         
         # Usar el clima más severo entre las dos estaciones
         weather_factor = min(
-            self.WEATHER_SPEED_FACTORS[weather1.get('type', 'sunny')],
-            self.WEATHER_SPEED_FACTORS[weather2.get('type', 'sunny')]
+            self.WEATHER_SPEED_FACTORS.get(weather1.get('type', 'sunny'), 1.0),
+            self.WEATHER_SPEED_FACTORS.get(weather2.get('type', 'sunny'), 1.0)
         )
         
         adjusted_speed = base_speed * weather_factor
@@ -339,12 +339,24 @@ class MetroSystem:
         """Actualiza y transmite el clima periódicamente"""
         while True:
             try:
+                # Actualizar el clima
                 self.update_weather()
+                
+                # Recalcular los pesos de las aristas con el nuevo clima
+                self._update_edge_weights()
+                
+                # Transmitir actualización
                 await self.broadcast_weather()
-                await asyncio.sleep(15)  # Cambiar a 15 segundos
+                await asyncio.sleep(15)
             except Exception as e:
                 logger.error(f"Error en actualización periódica del clima: {e}")
                 await asyncio.sleep(1)
+
+    def _update_edge_weights(self):
+        """Actualiza los pesos de las aristas basándose en el clima actual"""
+        for station1, station2, data in self.metro_graph.edges(data=True):
+            time = self.calculate_travel_time(station1, station2, data['line'])
+            self.metro_graph[station1][station2]['weight'] = time
 
     def update_weather(self):
         """Actualiza las condiciones climáticas basadas en lecturas de sensores"""
@@ -371,11 +383,14 @@ class MetroSystem:
         self.weather_conditions = updated_conditions
 
     def find_route(self, origin, destination):
+        # Actualizar el clima antes de calcular la ruta
+        self.update_weather()
+        
         try:
             path = nx.shortest_path(self.metro_graph, origin, destination, weight='weight')
             
             total_time = 0
-            total_distance = 0  # Añadir variable para distancia total
+            total_distance = 0
             lines = []
             current_line = None
             transbordos = []
@@ -385,24 +400,24 @@ class MetroSystem:
                 station1, station2 = path[i], path[i + 1]
                 edge = self.metro_graph[station1][station2]
                 
-                # Calcular distancia del segmento
                 coords1 = STATION_COORDINATES[station1]
                 coords2 = STATION_COORDINATES[station2]
                 segment_distance = self.calculate_distance(coords1[0], coords1[1], coords2[0], coords2[1])
                 total_distance += segment_distance
                 
+                # Recalcular el tiempo considerando el clima actual
                 base_time = self.calculate_travel_time(station1, station2, edge['line'])
                 
-                # Calcular impacto del clima
-                weather1 = self.weather_conditions.get(station1, {})
-                weather2 = self.weather_conditions.get(station2, {})
+                # Obtener condiciones climáticas actualizadas
+                weather1 = self.weather_conditions.get(station1, {'type': 'sunny', 'name': 'Soleado'})
+                weather2 = self.weather_conditions.get(station2, {'type': 'sunny', 'name': 'Soleado'})
                 
                 if edge.get('line') != 'transbordo':
                     if current_line != edge['line']:
                         current_line = edge['line']
                         lines.append(current_line)
                     
-                    # Añadir información sobre el impacto del clima
+                    # Añadir información sobre el impacto del clima si hay condiciones adversas
                     if weather1.get('type') != 'sunny' or weather2.get('type') != 'sunny':
                         weather_impacts.append({
                             "segment": [station1, station2],
@@ -411,12 +426,12 @@ class MetroSystem:
                                 "origin": {
                                     "station": station1,
                                     "weather": weather1.get('name', 'Soleado'),
-                                    "impact": round((1 - self.WEATHER_SPEED_FACTORS[weather1.get('type', 'sunny')]) * 100)
+                                    "impact": round((1 - self.WEATHER_SPEED_FACTORS.get(weather1.get('type', 'sunny'), 1.0)) * 100)
                                 },
                                 "destination": {
                                     "station": station2,
                                     "weather": weather2.get('name', 'Soleado'),
-                                    "impact": round((1 - self.WEATHER_SPEED_FACTORS[weather2.get('type', 'sunny')]) * 100)
+                                    "impact": round((1 - self.WEATHER_SPEED_FACTORS.get(weather2.get('type', 'sunny'), 1.0)) * 100)
                                 }
                             }
                         })
@@ -432,7 +447,7 @@ class MetroSystem:
                 "num_stations": len(path) - 1,
                 "lines": lines,
                 "estimated_time": round(total_time),
-                "total_distance": round(total_distance, 2),  # Distancia en kilómetros
+                "total_distance": round(total_distance, 2),
                 "transbordos": transbordos,
                 "weather_impacts": weather_impacts,
                 "weather_conditions": self.weather_conditions

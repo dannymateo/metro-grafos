@@ -11,37 +11,77 @@
 body {
   background: linear-gradient(135deg, #f6f8fc 0%, #e9ecef 100%);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
+/* Responsive container */
+.container {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0.5rem;
+  }
+}
+
+/* Map container responsive height */
 .leaflet-container {
   width: 100%;
   height: 600px;
   border-radius: 0.75rem;
+  font-family: inherit;
 }
 
+@media (max-width: 768px) {
+  .leaflet-container {
+    height: 400px;
+  }
+}
+
+/* Station icons and animations */
 .custom-station-icon {
   transition: all 0.3s ease;
 }
 
 .custom-station-icon:hover {
   transform: scale(1.2);
+  z-index: 1000;
 }
 
-.station-popup .leaflet-popup-content-wrapper {
-  border-radius: 12px;
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.station-popup .leaflet-popup-content {
-  margin: 8px 12px;
+.leaflet-popup-content {
+  margin: 0.5rem 0.75rem;
   font-family: inherit;
 }
 
-.station-popup .leaflet-popup-tip {
+.leaflet-popup-tip {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Animación para la ruta seleccionada */
+.leaflet-marker-icon {
+  transition: all 0.3s ease;
+}
+
+.leaflet-polyline {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+}
+
+.leaflet-polyline:hover {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Route animations */
 @keyframes dash {
   to {
     stroke-dashoffset: 0;
@@ -67,39 +107,142 @@ body {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Animaciones del clima */
+/* Weather animations */
 @keyframes rain {
-    0% { background-position: 0 0; }
-    100% { background-position: 500px 1000px; }
+  0% { background-position: 0 0; }
+  100% { background-position: 500px 1000px; }
 }
 
 @keyframes storm {
-    0% { 
-        background-position: 0 0;
-        opacity: 0.3;
-    }
-    50% { opacity: 0.7; }
-    100% { 
-        background-position: 500px 1000px;
-        opacity: 0.3;
-    }
+  0% { 
+    background-position: 0 0;
+    opacity: 0.3;
+  }
+  50% { opacity: 0.7; }
+  100% { 
+    background-position: 500px 1000px;
+    opacity: 0.3;
+  }
 }
 
 .animate-rain {
-    background-image: url('/weather/rain.png');
-    animation: rain 3s linear infinite;
-    opacity: 0.5;
+  background-image: url('/weather/rain.png');
+  animation: rain 3s linear infinite;
+  opacity: 0.5;
 }
 
 .animate-storm {
-    background-image: url('/weather/storm.png');
-    animation: storm 2s linear infinite;
+  background-image: url('/weather/storm.png');
+  animation: storm 2s linear infinite;
 }
 
 .animate-sunny {
-    background: linear-gradient(to bottom, rgba(255,255,190,0.2), transparent);
+  background: linear-gradient(to bottom, rgba(255,255,190,0.2), transparent);
 }
 
 .bg-gradient-radial {
-    background: radial-gradient(circle, var(--tw-gradient-from), var(--tw-gradient-to));
+  background: radial-gradient(circle, var(--tw-gradient-from), var(--tw-gradient-to));
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  .text-xl {
+    font-size: 1.125rem !important;
+  }
+}
+
+/* Card and table responsive styles */
+@media (max-width: 768px) {
+  .responsive-card {
+    margin: 0.5rem 0;
+  }
+  
+  .responsive-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Improved scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Glass effect improvements */
+.glass-effect {
+  backdrop-filter: blur(12px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(209, 213, 219, 0.3);
+}
+
+/* Loading states */
+.loading-skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: linear-gradient(
+    90deg,
+    rgba(209, 213, 219, 0.2) 25%,
+    rgba(209, 213, 219, 0.24) 37%,
+    rgba(209, 213, 219, 0.2) 63%
+  );
+  background-size: 400% 100%;
+}
+
+@keyframes pulse {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* Improved transitions */
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive grid layouts */
+.responsive-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Mobile-first padding and margins */
+.mobile-spacing {
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .mobile-spacing {
+    padding: 2rem;
+  }
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

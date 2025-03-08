@@ -28,7 +28,7 @@ const WeatherOverlay = memo(({ weatherConditions }: { weatherConditions: Record<
     }, [map]);
 
     useEffect(() => {
-        if (!isMapReady || !map) return;
+        if (!isMapReady || !map || !weatherConditions) return;
 
         // Limpiar marcadores existentes
         Object.values(markersRef.current).forEach(marker => marker.remove());
@@ -96,7 +96,7 @@ const WeatherOverlay = memo(({ weatherConditions }: { weatherConditions: Record<
 
 WeatherOverlay.displayName = 'WeatherOverlay';
 
-export default function Map({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation, weatherConditions }: Props) {
+const Map = ({ stations, coordinates, selectedRoute, lines, weatherConditions }: Props) => {
     const [isClient, setIsClient] = useState(false);
     const defaultCenter = [6.2442, -75.5812] as L.LatLngExpression;
 
@@ -114,15 +114,12 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
         });
     }, []);
 
-    useEffect(() => {
-        console.log('Weather conditions updated:', weatherConditions);
-    }, [weatherConditions]);
-
-    const createIcon = (isSelected: boolean, isOrigin?: boolean, isDestination?: boolean) => {
-        const size = isOrigin || isDestination ? 28 : isSelected ? 16 : 12;
-        const color = isOrigin ? '#22c55e' : 
-                     isDestination ? '#ef4444' : 
-                     isSelected ? '#6366f1' : '#1a73e8';
+    const createIcon = (isSelected: boolean) => {
+        const size = isSelected ? 24 : 16;
+        const color = isSelected ? '#FF3B30' : '#FFFFFF';
+        const borderColor = isSelected ? '#FFFFFF' : '#FFA000';
+        const borderWidth = isSelected ? 3 : 2;
+        const shadowOpacity = isSelected ? 0.8 : 0.5;
 
         return L.divIcon({
             className: 'custom-station-icon',
@@ -131,9 +128,9 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
                     width: ${size}px;
                     height: ${size}px;
                     background-color: ${color};
-                    border: ${isOrigin || isDestination ? 4 : 2}px solid white;
+                    border: ${borderWidth}px solid ${borderColor};
                     border-radius: 50%;
-                    box-shadow: 0 0 ${isOrigin || isDestination ? 8 : 4}px rgba(0,0,0,0.3);
+                    box-shadow: 0 0 ${size/2}px rgba(0,0,0,${shadowOpacity}), 0 0 ${size/4}px rgba(255,255,255,0.5);
                     transition: all 0.3s ease;
                 "></div>`,
             iconSize: [size, size],
@@ -143,8 +140,10 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
 
     const getLineStyle = (status?: { congestion: 'normal' | 'alta' | 'muy_alta' }) => {
         const baseStyle = {
-            weight: 4,
-            opacity: 0.8
+            weight: 6,
+            opacity: 1,
+            lineCap: 'round' as L.LineCapShape,
+            lineJoin: 'round' as L.LineJoinShape
         };
 
         if (!status) return baseStyle;
@@ -153,16 +152,16 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
             case 'muy_alta':
                 return {
                     ...baseStyle,
-                    weight: 6,
-                    opacity: 1,
-                    dashArray: '4, 8'
+                    weight: 8,
+                    opacity: 0.9,
+                    dashArray: '10, 10'
                 };
             case 'alta':
                 return {
                     ...baseStyle,
-                    weight: 5,
+                    weight: 7,
                     opacity: 0.9,
-                    dashArray: '1, 5'
+                    dashArray: '5, 5'
                 };
             default:
                 return baseStyle;
@@ -194,51 +193,44 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
         if (!selectedRoute) return null;
 
         return (
-            <Polyline
-                positions={selectedRoute.coordinates}
-                pathOptions={{
-                    color: '#dc2626',
-                    weight: 5,
-                    opacity: 0.8,
-                    lineCap: 'round',
-                    lineJoin: 'round',
-                    dashArray: selectedRoute.status?.congestion === 'muy_alta' ? '10,10' : undefined
-                }}
-            />
-        );
-    };
-
-    const renderUserLocation = () => {
-        if (!userLocation) return null;
-
-        return (
-            <Marker
-                position={userLocation}
-                icon={L.divIcon({
-                    className: 'user-location-icon',
-                    html: `
-                        <div class="relative">
-                            <div class="absolute inset-0 bg-blue-500/30 animate-ping rounded-full"
-                                style="width: 32px; height: 32px;">
-                            </div>
-                            <div class="relative bg-blue-500 border-2 border-white rounded-full shadow-lg"
-                                style="width: 16px; height: 16px;">
-                            </div>
-                        </div>
-                    `,
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
-                })}
-            >
-                <Popup>
-                    <div className="font-semibold">Tu ubicación actual</div>
-                    {nearestStation && (
-                        <div className="text-sm text-gray-600">
-                            Estación más cercana: {nearestStation}
-                        </div>
-                    )}
-                </Popup>
-            </Marker>
+            <>
+                {/* Capa de sombra para la ruta */}
+                <Polyline
+                    positions={selectedRoute.coordinates}
+                    pathOptions={{
+                        color: '#000000',
+                        weight: 8,
+                        opacity: 0.4,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        dashArray: selectedRoute.status?.congestion === 'muy_alta' ? '10,10' : undefined
+                    }}
+                />
+                {/* Ruta principal */}
+                <Polyline
+                    positions={selectedRoute.coordinates}
+                    pathOptions={{
+                        color: '#FF3B30',
+                        weight: 4,
+                        opacity: 1,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        dashArray: selectedRoute.status?.congestion === 'muy_alta' ? '10,10' : undefined
+                    }}
+                />
+                {/* Borde brillante */}
+                <Polyline
+                    positions={selectedRoute.coordinates}
+                    pathOptions={{
+                        color: '#FFFFFF',
+                        weight: 1,
+                        opacity: 0.8,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        dashArray: selectedRoute.status?.congestion === 'muy_alta' ? '10,10' : undefined
+                    }}
+                />
+            </>
         );
     };
 
@@ -248,125 +240,30 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
 
     return (
         <div className="h-[600px] w-full relative rounded-xl overflow-hidden shadow-xl">
-            <style jsx global>{`
-                @keyframes pulse {
-                    0% {
-                        transform: translate(-50%, -50%) scale(0.95);
-                        opacity: 0.6;
-                    }
-                    50% {
-                        transform: translate(-50%, -50%) scale(1.05);
-                        opacity: 0.8;
-                    }
-                    100% {
-                        transform: translate(-50%, -50%) scale(0.95);
-                        opacity: 0.6;
-                    }
-                }
-                .weather-effect {
-                    pointer-events: none;
-                }
-                .weather-circle {
-                    transition: all 0.5s ease;
-                }
-                
-                .weather-sunny {
-                    animation: pulse-sunny 4s infinite;
-                }
-                
-                .weather-cloudy {
-                    animation: pulse-cloudy 6s infinite;
-                }
-                
-                .weather-rainy {
-                    animation: pulse-rainy 3s infinite;
-                }
-                
-                .weather-stormy {
-                    animation: pulse-stormy 2s infinite;
-                }
-                
-                @keyframes pulse-sunny {
-                    0% { opacity: 0.7; }
-                    50% { opacity: 1; }
-                    100% { opacity: 0.7; }
-                }
-                
-                @keyframes pulse-cloudy {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
-                    100% { transform: scale(1); }
-                }
-                
-                @keyframes pulse-rainy {
-                    0% { opacity: 0.6; }
-                    50% { opacity: 0.9; }
-                    100% { opacity: 0.6; }
-                }
-                
-                @keyframes pulse-stormy {
-                    0% { opacity: 0.7; transform: scale(1); }
-                    50% { opacity: 1; transform: scale(1.1); }
-                    100% { opacity: 0.7; transform: scale(1); }
-                }
-                
-                .weather-container {
-                    position: relative;
-                    width: 20px;
-                    height: 20px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background-color: rgba(255, 255, 255, 0.9);
-                    border-radius: 50%;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-                }
-
-                .weather-symbol {
-                    position: relative;
-                    font-size: 12px;
-                    line-height: 1;
-                    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
-                }
-
-                .weather-icon:hover .weather-symbol {
-                    transform: scale(1.2);
-                }
-
-                .weather-popup {
-                    text-align: center;
-                    padding: 2px 4px;
-                    font-size: 11px;
-                }
-            `}</style>
             <MapContainer 
                 center={defaultCenter}
-                zoom={12} 
+                zoom={13} 
                 style={{ height: '100%', width: '100%' }}
                 scrollWheelZoom={true}
                 className="z-0"
             >
                 <TileLayer
-                    url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://api.mapbox.com/styles/v1/dannymateoh1/clvbhsqsh011d01peahrq3t8b/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZGFubnltYXRlb2gxIiwiYSI6ImNsdmJocHlmYjA5M3oycXFtM2llaWJsY2sifQ.a8cfb91OkmPekSpKNc90iw"
+                    attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
+                    maxZoom={20}
                 />
                 {renderMetroLines()}
                 {renderSelectedRoute()}
-                {weatherConditions && (
-                    <WeatherOverlay weatherConditions={weatherConditions} />
-                )}
                 {stations.map((station) => {
                     const coords = coordinates[station];
                     if (coords) {
                         const isSelected = selectedRoute?.path.includes(station);
-                        const isOrigin = selectedRoute?.path[0] === station;
-                        const isDestination = selectedRoute?.path[selectedRoute.path.length - 1] === station;
                         
                         return (
                             <Marker 
                                 key={station} 
                                 position={coords}
-                                icon={createIcon(!!isSelected, isOrigin, isDestination)}
+                                icon={createIcon(!!isSelected)}
                             >
                                 <Popup className="station-popup">
                                     <div className="font-semibold text-gray-900">{station}</div>
@@ -376,8 +273,12 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
                     }
                     return null;
                 })}
-                {renderUserLocation()}
+                {weatherConditions && (
+                    <WeatherOverlay weatherConditions={weatherConditions} />
+                )}
             </MapContainer>
         </div>
     );
-} 
+}
+
+export default Map; 
