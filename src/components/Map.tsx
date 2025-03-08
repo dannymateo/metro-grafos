@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { useEffect, useState, useRef, memo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { WeatherCondition, WeatherReading } from './RouteWebSocket';
 
 type MapProps = {
     stations: string[];
@@ -26,9 +27,145 @@ type MapProps = {
     }>;
     userLocation?: [number, number];
     nearestStation?: string;
+    weatherConditions?: Record<string, WeatherCondition>;
 }
 
-export default function Map({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation }: MapProps) {
+const WEATHER_ICONS = {
+    sunny: '☀️',
+    cloudy: '☁️',
+    rainy: '🌧️',
+    stormy: '⛈️'
+};
+
+const WEATHER_STYLES = {
+    sunny: {
+        color: 'rgba(255, 215, 0, 0.3)',
+        radius: 800,
+        gradient: [
+            'rgba(255, 215, 0, 0.1)',
+            'rgba(255, 215, 0, 0.3)',
+            'rgba(255, 215, 0, 0.1)'
+        ]
+    },
+    cloudy: {
+        color: 'rgba(169, 169, 169, 0.4)',
+        radius: 1000,
+        gradient: [
+            'rgba(169, 169, 169, 0.2)',
+            'rgba(169, 169, 169, 0.4)',
+            'rgba(169, 169, 169, 0.2)'
+        ]
+    },
+    rainy: {
+        color: 'rgba(70, 130, 180, 0.5)',
+        radius: 900,
+        gradient: [
+            'rgba(70, 130, 180, 0.2)',
+            'rgba(70, 130, 180, 0.5)',
+            'rgba(70, 130, 180, 0.2)'
+        ]
+    },
+    stormy: {
+        color: 'rgba(72, 61, 139, 0.6)',
+        radius: 1200,
+        gradient: [
+            'rgba(72, 61, 139, 0.3)',
+            'rgba(72, 61, 139, 0.6)',
+            'rgba(72, 61, 139, 0.3)'
+        ]
+    }
+};
+
+const WeatherOverlay = memo(({ weatherConditions }: { weatherConditions: Record<string, WeatherCondition> }) => {
+    const map = useMap();
+    const markersRef = useRef<Record<string, L.Marker>>({});
+    const [isMapReady, setIsMapReady] = useState(false);
+
+    useEffect(() => {
+        if (!map) return;
+
+        const checkMap = () => {
+            if (map && map.getZoom() !== undefined) {
+                setIsMapReady(true);
+            }
+        };
+
+        map.whenReady(checkMap);
+        return () => {
+            map.off('ready', checkMap);
+        };
+    }, [map]);
+
+    useEffect(() => {
+        if (!isMapReady || !map) return;
+
+        // Limpiar marcadores existentes
+        Object.values(markersRef.current).forEach(marker => marker.remove());
+        markersRef.current = {};
+
+        // Añadir nuevos marcadores
+        Object.entries(weatherConditions).forEach(([station, condition]) => {
+            const coords = condition.location;
+            if (!coords) return;
+
+            if (!markersRef.current[station]) {
+                const marker = createWeatherMarker(station, condition);
+                markersRef.current[station] = marker;
+                marker.addTo(map);
+            } else {
+                updateWeatherMarker(markersRef.current[station], condition);
+            }
+        });
+
+        return () => {
+            Object.values(markersRef.current).forEach(marker => marker.remove());
+        };
+    }, [map, isMapReady, weatherConditions]);
+
+    const createWeatherMarker = (station: string, condition: WeatherCondition) => {
+        const marker = L.marker(condition.location, {
+            icon: createWeatherIcon(condition),
+            zIndexOffset: 1000
+        });
+
+        marker.bindPopup(createPopupContent(station, condition));
+        return marker;
+    };
+
+    const createWeatherIcon = (condition: WeatherCondition) => {
+        return L.divIcon({
+            className: `weather-icon weather-${condition.type}`,
+            html: `
+                <div class="weather-container">
+                    <div class="weather-symbol">${condition.icon}</div>
+                </div>
+            `,
+            iconSize: [16, 16],
+            iconAnchor: [8, -8]
+        });
+    };
+
+    const createPopupContent = (station: string, condition: WeatherCondition) => {
+        const lastUpdate = new Date(condition.last_updated).toLocaleTimeString();
+        return `
+            <div class="weather-popup">
+                <div class="text-sm">${condition.name} (${station})</div>
+                <div class="text-xs">🌡️ ${condition.readings.temperature}°C</div>
+            </div>
+        `;
+    };
+
+    const updateWeatherMarker = (marker: L.Marker, condition: WeatherCondition) => {
+        marker.setIcon(createWeatherIcon(condition));
+        marker.setPopupContent(createPopupContent(marker.getPopup()?.getContent() as string, condition));
+    };
+
+    return null;
+});
+
+WeatherOverlay.displayName = 'WeatherOverlay';
+
+export default function Map({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation, weatherConditions }: MapProps) {
     const [isClient, setIsClient] = useState(false);
     const defaultCenter = [6.2442, -75.5812] as L.LatLngExpression;
 
@@ -45,6 +182,10 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
             shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
         });
     }, []);
+
+    useEffect(() => {
+        console.log('Weather conditions updated:', weatherConditions);
+    }, [weatherConditions]);
 
     const createIcon = (isSelected: boolean, isOrigin?: boolean, isDestination?: boolean) => {
         const size = isOrigin || isDestination ? 28 : isSelected ? 16 : 12;
@@ -176,6 +317,97 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
 
     return (
         <div className="h-[600px] w-full relative rounded-xl overflow-hidden shadow-xl">
+            <style jsx global>{`
+                @keyframes pulse {
+                    0% {
+                        transform: translate(-50%, -50%) scale(0.95);
+                        opacity: 0.6;
+                    }
+                    50% {
+                        transform: translate(-50%, -50%) scale(1.05);
+                        opacity: 0.8;
+                    }
+                    100% {
+                        transform: translate(-50%, -50%) scale(0.95);
+                        opacity: 0.6;
+                    }
+                }
+                .weather-effect {
+                    pointer-events: none;
+                }
+                .weather-circle {
+                    transition: all 0.5s ease;
+                }
+                
+                .weather-sunny {
+                    animation: pulse-sunny 4s infinite;
+                }
+                
+                .weather-cloudy {
+                    animation: pulse-cloudy 6s infinite;
+                }
+                
+                .weather-rainy {
+                    animation: pulse-rainy 3s infinite;
+                }
+                
+                .weather-stormy {
+                    animation: pulse-stormy 2s infinite;
+                }
+                
+                @keyframes pulse-sunny {
+                    0% { opacity: 0.7; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.7; }
+                }
+                
+                @keyframes pulse-cloudy {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                    100% { transform: scale(1); }
+                }
+                
+                @keyframes pulse-rainy {
+                    0% { opacity: 0.6; }
+                    50% { opacity: 0.9; }
+                    100% { opacity: 0.6; }
+                }
+                
+                @keyframes pulse-stormy {
+                    0% { opacity: 0.7; transform: scale(1); }
+                    50% { opacity: 1; transform: scale(1.1); }
+                    100% { opacity: 0.7; transform: scale(1); }
+                }
+                
+                .weather-container {
+                    position: relative;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background-color: rgba(255, 255, 255, 0.9);
+                    border-radius: 50%;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                }
+
+                .weather-symbol {
+                    position: relative;
+                    font-size: 12px;
+                    line-height: 1;
+                    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+                }
+
+                .weather-icon:hover .weather-symbol {
+                    transform: scale(1.2);
+                }
+
+                .weather-popup {
+                    text-align: center;
+                    padding: 2px 4px;
+                    font-size: 11px;
+                }
+            `}</style>
             <MapContainer 
                 center={defaultCenter}
                 zoom={12} 
@@ -189,6 +421,9 @@ export default function Map({ stations, coordinates, selectedRoute, lines, userL
                 />
                 {renderMetroLines()}
                 {renderSelectedRoute()}
+                {weatherConditions && (
+                    <WeatherOverlay weatherConditions={weatherConditions} />
+                )}
                 {stations.map((station) => {
                     const coords = coordinates[station];
                     if (coords) {

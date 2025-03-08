@@ -11,34 +11,168 @@ import {
     Divider,
     Chip,
     Spinner,
-    Input
+    Modal,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter
 } from "@nextui-org/react";
-import { MapPin, Navigation, Clock, Train, AlertCircle, Loader2, ArrowRight, GitCommit, Navigation2, Download, Search, Crosshair } from 'lucide-react';
+import { MapPin, Navigation, Clock, Train, AlertCircle, Loader2, ArrowRight, GitCommit, Download, Crosshair } from 'lucide-react';
 import MapComponent from './MapComponent';
 import Image from 'next/image';
 import AdminPanel from './AdminPanel';
+
+export type Route = {
+    path: string[];
+    coordinates: [number, number][];
+    num_stations: number;
+    lines: string[];
+    estimated_time: number;
+    total_distance: number;
+    transbordos: string[];
+    timestamp: string;
+    weather_impacts: any[];
+}
+
+export type MetroLines = {
+    [key: string]: {
+        color: string;
+        stations: string[];
+    };
+}
+
+export type WeatherReading = {
+    temperature: number;
+    humidity: number;
+    pressure: number;
+    visibility: number;
+};
+
+export type WeatherCondition = {
+    type: 'sunny' | 'cloudy' | 'rainy' | 'stormy';
+    intensity: number;
+    name: string;
+    icon: string;
+    location: [number, number];
+    readings: WeatherReading;
+    station_id: string;
+    last_updated: string;
+};
 
 type Station = {
     name: string;
     line: string;
 }
 
-type Route = {
-    path: string[];
-    coordinates: [number, number][];
-    num_stations: number;
-    lines: string[];
-    estimated_time: number;
-    transbordos: string[];
-    timestamp: string;
-}
+// Mover la función fuera de los componentes
+const getWeatherIcon = (weather: string) => {
+    switch(weather.toLowerCase()) {
+        case 'lluvioso': return '🌧️';
+        case 'nublado': return '☁️';
+        case 'tormenta': return '⛈️';
+        default: return '☀️';
+    }
+};
 
-type MetroLines = {
-    [key: string]: {
-        color: string;
-        stations: string[];
+const WeatherImpactInfo = ({ weatherImpacts }: { weatherImpacts: any[] }) => {
+    if (!weatherImpacts?.length) return null;
+    const [showDetails, setShowDetails] = useState(false);
+
+    const maxImpact = Math.max(...weatherImpacts.map(impact => 
+        Math.max(impact.conditions.origin.impact, impact.conditions.destination.impact)
+    ));
+
+    const getImpactColor = (impact: number) => {
+        if (impact > 30) return 'text-red-600';
+        if (impact > 20) return 'text-orange-500';
+        return 'text-green-600';
     };
-}
+
+    return (
+        <div className="mt-4">
+            <div className="bg-gradient-to-r from-blue-50 to-yellow-50 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-500" />
+                        <div>
+                            <div className="text-sm font-medium text-gray-700">Clima en ruta</div>
+                            <div className="text-xs text-gray-500">{weatherImpacts.length} segmentos afectados</div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Chip
+                            size="sm"
+                            variant="flat"
+                            color={maxImpact > 30 ? "danger" : maxImpact > 20 ? "warning" : "success"}
+                            className="text-xs"
+                            startContent={<Clock className="w-3 h-3" />}
+                        >
+                            +{maxImpact}% tiempo
+                        </Chip>
+                        <Button
+                            size="sm"
+                            variant="light"
+                            onPress={() => setShowDetails(true)}
+                        >
+                            Ver detalles
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <Modal 
+                isOpen={showDetails} 
+                onClose={() => setShowDetails(false)}
+                size="md"
+            >
+                <ModalContent>
+                    <ModalHeader>Detalles del clima en la ruta</ModalHeader>
+                    <ModalBody>
+                        <WeatherDetailsContent weatherImpacts={weatherImpacts} />
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button color="primary" onPress={() => setShowDetails(false)}>
+                            Cerrar
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </div>
+    );
+};
+
+// Componente separado para los detalles
+const WeatherDetailsContent = ({ weatherImpacts }: { weatherImpacts: any[] }) => {
+    return (
+        <div className="space-y-2">
+            {weatherImpacts.map((impact, idx) => (
+                <div 
+                    key={idx} 
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                >
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium">
+                            {impact.segment[0]} → {impact.segment[1]}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-full">
+                            <span className="text-xs">{impact.conditions.origin.weather}</span>
+                            <span className="text-base">{getWeatherIcon(impact.conditions.origin.weather)}</span>
+                        </div>
+                        <Chip 
+                            size="sm" 
+                            variant="flat" 
+                            color={impact.conditions.origin.impact > 20 ? "warning" : "success"}
+                        >
+                            +{impact.conditions.origin.impact}%
+                        </Chip>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 export default function RouteWebSocket() {
     const [ws, setWs] = useState<WebSocket | null>(null);
@@ -52,91 +186,73 @@ export default function RouteWebSocket() {
     const [error, setError] = useState<string | null>(null);
     const [selectedHistoryRoute, setSelectedHistoryRoute] = useState<Route | null>(null);
     const [isMounted, setIsMounted] = useState(false);
-    const [weatherInfo, setWeatherInfo] = useState<Record<string, any>>({});
-    const [zoneConditions, setZoneConditions] = useState<Record<string, any>>({});
-    const [useCurrentLocation, setUseCurrentLocation] = useState(false);
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [nearestStation, setNearestStation] = useState<string | null>(null);
+    const [weatherConditions, setWeatherConditions] = useState<Record<string, WeatherCondition>>({});
 
     useEffect(() => {
+        let mounted = true;
         setIsMounted(true);
-        const fetchStationsAndLines = async () => {
+
+        // Cargar datos iniciales
+        const fetchInitialData = async () => {
             try {
-                const [stationsRes, linesRes, coordsRes] = await Promise.all([
+                const [stationsRes, coordsRes, linesRes] = await Promise.all([
                     fetch('http://localhost:8000/stations'),
-                    fetch('http://localhost:8000/lines'),
-                    fetch('http://localhost:8000/coordinates')
+                    fetch('http://localhost:8000/coordinates'),
+                    fetch('http://localhost:8000/lines')
                 ]);
-                
+
+                if (!mounted) return;
+
                 const stationsData = await stationsRes.json();
-                const linesData = await linesRes.json();
                 const coordsData = await coordsRes.json();
-                
-                if (Array.isArray(stationsData.stations)) {
-                    setStations(stationsData.stations);
-                } else {
-                    console.error('Stations data is not an array:', stationsData);
-                    setStations([]);
-                }
+                const linesData = await linesRes.json();
 
-                if (coordsData.coordinates) {
-                    setCoordinates(coordsData.coordinates);
-                }
-
-                if (linesData.lines) {
-                    setLines(linesData.lines);
-                }
+                setStations(stationsData.stations || []);
+                setCoordinates(coordsData.coordinates || {});
+                setLines(linesData.lines || {});
             } catch (error) {
-                console.error('Error fetching data:', error);
-                setError('Error al cargar las estaciones y líneas');
-                setStations([]);
-                setCoordinates({});
-                setLines({});
+                console.error('Error fetching initial data:', error);
             }
         };
 
-        fetchStationsAndLines();
+        // Inicializar WebSocket
+        const initializeWebSocket = () => {
+            const socket = new WebSocket('ws://localhost:8000/ws');
+            
+            socket.onopen = () => {
+                console.log('WebSocket Connected');
+                if (mounted) setWs(socket);
+            };
 
-        const socket = new WebSocket('ws://localhost:8000/ws');
-        
-        socket.onopen = () => {
-            console.log('WebSocket Connected');
-            setWs(socket);
-        };
-
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('WebSocket message received:', data);
-
-            if (data.type === "weather_update") {
-                console.log('Weather update received:', data.zone_conditions);
-                setZoneConditions(data.zone_conditions);
-                if (currentRoute) {
-                    handleRouteRequest();
-                }
-            } else if (data.error) {
-                setError(data.error);
-                setLoading(false);
-            } else {
-                setCurrentRoute(data);
-                if (data.weather_info) {
-                    setWeatherInfo(data.weather_info);
-                }
-                if (data.zone_conditions) {
-                    setZoneConditions(data.zone_conditions);
+            socket.onmessage = (event) => {
+                if (!mounted) return;
+                const data = JSON.parse(event.data);
+                
+                if (data.type === "weather_update") {
+                    setWeatherConditions(data.weather_conditions);
+                } else if (data.weather_conditions) {
+                    setCurrentRoute(data);
+                    setWeatherConditions(data.weather_conditions);
                 }
                 setLoading(false);
-            }
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                if (mounted) setError('Error en la conexión WebSocket');
+            };
+
+            return socket;
         };
 
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            setError('Error en la conexión WebSocket');
-            setLoading(false);
-        };
+        fetchInitialData();
+        const socket = initializeWebSocket();
 
         return () => {
-            if (socket) {
+            mounted = false;
+            if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.close();
             }
         };
@@ -328,8 +444,8 @@ export default function RouteWebSocket() {
                             <div className="space-y-6">
                                 <div className="flex gap-2">
                                     <Select
-                                        label="Origen"
-                                        placeholder="Selecciona estación de origen"
+                                        label="Estación de origen"
+                                        placeholder="¿Desde dónde?"
                                         value={origin}
                                         onChange={(e) => setOrigin(e.target.value)}
                                         startContent={<MapPin className="w-4 h-4" />}
@@ -351,12 +467,6 @@ export default function RouteWebSocket() {
                                     </Button>
                                 </div>
 
-                                <div className="flex justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                        <ArrowRight className="text-blue-600 w-5 h-5" />
-                                    </div>
-                                </div>
-
                                 <Select
                                     label="Estación de destino"
                                     placeholder="¿A dónde vas?"
@@ -365,7 +475,6 @@ export default function RouteWebSocket() {
                                     startContent={
                                         <div className="flex items-center">
                                             <Navigation className="text-red-500 w-5 h-5" />
-                                            <Search className="text-gray-400 w-4 h-4 ml-2" />
                                         </div>
                                     }
                                     classNames={{
@@ -393,7 +502,7 @@ export default function RouteWebSocket() {
                                 disabled={!origin || !destination}
                                 className="w-full bg-gradient-to-r from-blue-700 to-blue-500 shadow-lg hover:shadow-blue-200 transition-all"
                                 size="lg"
-                                startContent={!loading && <Navigation2 className="w-5 h-5" />}
+                                endContent={!loading && <Navigation className="w-5 h-5" />}
                             >
                                 {loading ? 'Calculando ruta...' : 'Buscar mejor ruta'}
                             </Button>
@@ -408,13 +517,24 @@ export default function RouteWebSocket() {
                             {currentRoute && (
                                 <Card className="bg-gradient-to-br from-blue-50 to-white border-none shadow-sm">
                                     <CardBody className="space-y-4">
-                                        <div className="flex items-center gap-3 bg-blue-100/50 p-3 rounded-lg">
-                                            <Clock className="w-6 h-6 text-blue-600" />
-                                            <div>
-                                                <p className="text-sm text-blue-600 font-medium">Tiempo estimado</p>
-                                                <p className="text-xl font-bold text-blue-900">
-                                                    {currentRoute.estimated_time} minutos
-                                                </p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex items-center gap-3 bg-blue-100/50 p-3 rounded-lg">
+                                                <Clock className="w-6 h-6 text-blue-600" />
+                                                <div>
+                                                    <p className="text-sm text-blue-600 font-medium">Tiempo estimado</p>
+                                                    <p className="text-xl font-bold text-blue-900">
+                                                        {currentRoute.estimated_time} minutos
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 bg-green-100/50 p-3 rounded-lg">
+                                                <MapPin className="w-6 h-6 text-green-600" />
+                                                <div>
+                                                    <p className="text-sm text-green-600 font-medium">Distancia total</p>
+                                                    <p className="text-xl font-bold text-green-900">
+                                                        {currentRoute.total_distance} km
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                         
@@ -461,6 +581,10 @@ export default function RouteWebSocket() {
                                                 </div>
                                             </div>
                                         )}
+
+                                        {currentRoute.weather_impacts && (
+                                            <WeatherImpactInfo weatherImpacts={currentRoute.weather_impacts} />
+                                        )}
                                     </CardBody>
                                 </Card>
                             )}
@@ -474,6 +598,9 @@ export default function RouteWebSocket() {
                                 coordinates={coordinates}
                                 selectedRoute={selectedHistoryRoute || currentRoute}
                                 lines={lines}
+                                userLocation={userLocation || undefined}
+                                nearestStation={nearestStation || undefined}
+                                weatherConditions={weatherConditions}
                             />
                         </CardBody>
                     </Card>
@@ -482,7 +609,7 @@ export default function RouteWebSocket() {
                 <div className="mt-8">
                     <AdminPanel 
                         stations={stations}
-                        onShowRoute={(route) => setSelectedHistoryRoute(route)}
+                        onShowRoute={(route) => setSelectedHistoryRoute(route as Route)}
                     />
                 </div>
             </div>
