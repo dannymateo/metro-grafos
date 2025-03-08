@@ -16,6 +16,7 @@ import {
 } from "@nextui-org/react";
 import { History, ArrowRight } from 'lucide-react';
 import { Route } from './RouteWebSocket';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 type AdminPanelProps = {
     stations: string[];
@@ -23,28 +24,9 @@ type AdminPanelProps = {
 }
 
 export default function AdminPanel({ stations, onShowRoute }: AdminPanelProps) {
-    const [routeHistory, setRouteHistory] = useState<Route[]>([]);
+    const { routeHistory } = useWebSocket();
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                const response = await fetch('http://localhost:8000/routes/history');
-                const data = await response.json();
-                if (data.routes) {
-                    setRouteHistory(data.routes);
-                }
-            } catch (error) {
-                console.error('Error fetching route history:', error);
-            }
-        };
-
-        fetchHistory();
-        const interval = setInterval(fetchHistory, 5000); // Actualizar cada 5 segundos
-
-        return () => clearInterval(interval);
-    }, []);
-
-    if (!routeHistory || routeHistory.length === 0) {
+    if (!routeHistory?.length) {
         return null;
     }
 

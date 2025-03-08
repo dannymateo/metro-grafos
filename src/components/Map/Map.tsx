@@ -4,77 +4,8 @@ import { useEffect, useState, useRef, memo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { WeatherCondition, WeatherReading } from './RouteWebSocket';
-
-type MapProps = {
-    stations: string[];
-    coordinates: Record<string, [number, number]>;
-    selectedRoute?: {
-        path: string[];
-        coordinates: [number, number][];
-        status?: {
-            congestion: 'normal' | 'alta' | 'muy_alta';
-            alerts?: string[];
-        };
-    } | null;
-    lines?: Record<string, {
-        color: string;
-        stations: string[];
-        status?: {
-            congestion: 'normal' | 'alta' | 'muy_alta';
-            alerts?: string[];
-        };
-    }>;
-    userLocation?: [number, number];
-    nearestStation?: string;
-    weatherConditions?: Record<string, WeatherCondition>;
-}
-
-const WEATHER_ICONS = {
-    sunny: '☀️',
-    cloudy: '☁️',
-    rainy: '🌧️',
-    stormy: '⛈️'
-};
-
-const WEATHER_STYLES = {
-    sunny: {
-        color: 'rgba(255, 215, 0, 0.3)',
-        radius: 800,
-        gradient: [
-            'rgba(255, 215, 0, 0.1)',
-            'rgba(255, 215, 0, 0.3)',
-            'rgba(255, 215, 0, 0.1)'
-        ]
-    },
-    cloudy: {
-        color: 'rgba(169, 169, 169, 0.4)',
-        radius: 1000,
-        gradient: [
-            'rgba(169, 169, 169, 0.2)',
-            'rgba(169, 169, 169, 0.4)',
-            'rgba(169, 169, 169, 0.2)'
-        ]
-    },
-    rainy: {
-        color: 'rgba(70, 130, 180, 0.5)',
-        radius: 900,
-        gradient: [
-            'rgba(70, 130, 180, 0.2)',
-            'rgba(70, 130, 180, 0.5)',
-            'rgba(70, 130, 180, 0.2)'
-        ]
-    },
-    stormy: {
-        color: 'rgba(72, 61, 139, 0.6)',
-        radius: 1200,
-        gradient: [
-            'rgba(72, 61, 139, 0.3)',
-            'rgba(72, 61, 139, 0.6)',
-            'rgba(72, 61, 139, 0.3)'
-        ]
-    }
-};
+import { WeatherCondition, WeatherReading } from '@/components/RouteWebSocket';
+import { Props } from './types';
 
 const WeatherOverlay = memo(({ weatherConditions }: { weatherConditions: Record<string, WeatherCondition> }) => {
     const map = useMap();
@@ -165,7 +96,7 @@ const WeatherOverlay = memo(({ weatherConditions }: { weatherConditions: Record<
 
 WeatherOverlay.displayName = 'WeatherOverlay';
 
-export default function Map({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation, weatherConditions }: MapProps) {
+export default function Map({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation, weatherConditions }: Props) {
     const [isClient, setIsClient] = useState(false);
     const defaultCenter = [6.2442, -75.5812] as L.LatLngExpression;
 

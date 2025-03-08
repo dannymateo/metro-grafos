@@ -450,10 +450,13 @@ async def websocket_endpoint(websocket: WebSocket):
     metro_system.connected_clients.add(websocket)
     
     try:
-        # Enviar datos iniciales del clima
+        # Enviar datos iniciales: clima y historial de rutas
         initial_data = {
-            "type": "weather_update",
-            "weather_conditions": metro_system.weather_monitoring.update_weather()
+            "type": "initial_data",
+            "data": {
+                "weather_conditions": metro_system.weather_monitoring.update_weather(),
+                "route_history": metro_system.route_history
+            }
         }
         await websocket.send_json(initial_data)
         
@@ -464,14 +467,35 @@ async def websocket_endpoint(websocket: WebSocket):
             
             route = metro_system.find_route(origin, destination)
             if route:
-                await websocket.send_json(route)
+                # Enviar la nueva ruta a todos los clientes conectados
+                route_update = {
+                    "type": "route_update",
+                    "data": {
+                        "new_route": route,
+                        "route_history": metro_system.route_history
+                    }
+                }
+                await broadcast_to_clients(route_update)
             else:
                 await websocket.send_json({"error": "No se encontró una ruta disponible"})
+                
     except WebSocketDisconnect:
         metro_system.connected_clients.remove(websocket)
     except Exception as e:
         logger.error(f"Error en websocket: {e}")
         metro_system.connected_clients.remove(websocket)
+
+async def broadcast_to_clients(message):
+    """Envía un mensaje a todos los clientes conectados"""
+    disconnected_clients = set()
+    for client in metro_system.connected_clients:
+        try:
+            await client.send_json(message)
+        except Exception as e:
+            logger.error(f"Error al enviar mensaje: {e}")
+            disconnected_clients.add(client)
+    
+    metro_system.connected_clients -= disconnected_clients
 
 @app.get("/stations")
 async def get_stations():

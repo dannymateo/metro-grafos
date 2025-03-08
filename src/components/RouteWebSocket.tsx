@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import {
-    Select,
-    SelectItem,
     Button,
     Card,
     CardBody,
@@ -19,10 +17,14 @@ import {
     Autocomplete,
     AutocompleteItem
 } from "@nextui-org/react";
-import { MapPin, Navigation, Clock, Train, AlertCircle, Loader2, ArrowRight, GitCommit, Download, Crosshair } from 'lucide-react';
-import MapComponent from './MapComponent';
+import { MapPin, Navigation, Clock, Train, AlertCircle, ArrowRight, GitCommit, Download, Crosshair } from 'lucide-react';
+
+import MapComponent from '@/components/MapComponent/MapComponent';
 import Image from 'next/image';
 import AdminPanel from './AdminPanel';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { fetchInitialData } from '@/services/api';
+import { WeatherDetailsContent } from './WeatherDetailsContent/WeatherDetailsContent/WeatherDetailsContent';
 
 export type Route = {
     path: string[];
@@ -61,21 +63,6 @@ export type WeatherCondition = {
     last_updated: string;
 };
 
-type Station = {
-    name: string;
-    line: string;
-}
-
-// Mover la función fuera de los componentes
-const getWeatherIcon = (weather: string) => {
-    switch(weather.toLowerCase()) {
-        case 'lluvioso': return '🌧️';
-        case 'nublado': return '☁️';
-        case 'tormenta': return '⛈️';
-        default: return '☀️';
-    }
-};
-
 const WeatherImpactInfo = ({ weatherImpacts }: { weatherImpacts: any[] }) => {
     if (!weatherImpacts?.length) return null;
     const [showDetails, setShowDetails] = useState(false);
@@ -83,12 +70,6 @@ const WeatherImpactInfo = ({ weatherImpacts }: { weatherImpacts: any[] }) => {
     const maxImpact = Math.max(...weatherImpacts.map(impact => 
         Math.max(impact.conditions.origin.impact, impact.conditions.destination.impact)
     ));
-
-    const getImpactColor = (impact: number) => {
-        if (impact > 30) return 'text-red-600';
-        if (impact > 20) return 'text-orange-500';
-        return 'text-green-600';
-    };
 
     return (
         <div className="mt-4">
@@ -143,121 +124,30 @@ const WeatherImpactInfo = ({ weatherImpacts }: { weatherImpacts: any[] }) => {
     );
 };
 
-// Componente separado para los detalles
-const WeatherDetailsContent = ({ weatherImpacts }: { weatherImpacts: any[] }) => {
-    return (
-        <div className="space-y-2">
-            {weatherImpacts.map((impact, idx) => (
-                <div 
-                    key={idx} 
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-all duration-200"
-                >
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium">
-                            {impact.segment[0]} → {impact.segment[1]}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-full">
-                            <span className="text-xs">{impact.conditions.origin.weather}</span>
-                            <span className="text-base">{getWeatherIcon(impact.conditions.origin.weather)}</span>
-                        </div>
-                        <Chip 
-                            size="sm" 
-                            variant="flat" 
-                            color={impact.conditions.origin.impact > 20 ? "warning" : "success"}
-                        >
-                            +{impact.conditions.origin.impact}%
-                        </Chip>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
-
 export default function RouteWebSocket() {
-    const [ws, setWs] = useState<WebSocket | null>(null);
+    const { ws, weatherConditions, currentRoute, loading, error, setLoading, setError } = useWebSocket();
     const [stations, setStations] = useState<string[]>([]);
     const [coordinates, setCoordinates] = useState<Record<string, [number, number]>>({});
     const [lines, setLines] = useState<MetroLines>({});
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState("");
-    const [currentRoute, setCurrentRoute] = useState<Route | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [selectedHistoryRoute, setSelectedHistoryRoute] = useState<Route | null>(null);
-    const [isMounted, setIsMounted] = useState(false);
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [nearestStation, setNearestStation] = useState<string | null>(null);
-    const [weatherConditions, setWeatherConditions] = useState<Record<string, WeatherCondition>>({});
 
     useEffect(() => {
-        let mounted = true;
-        setIsMounted(true);
-
-        // Cargar datos iniciales
-        const fetchInitialData = async () => {
+        const loadInitialData = async () => {
             try {
-                const [stationsRes, coordsRes, linesRes] = await Promise.all([
-                    fetch('http://localhost:8000/stations'),
-                    fetch('http://localhost:8000/coordinates'),
-                    fetch('http://localhost:8000/lines')
-                ]);
-
-                if (!mounted) return;
-
-                const stationsData = await stationsRes.json();
-                const coordsData = await coordsRes.json();
-                const linesData = await linesRes.json();
-
-                setStations(stationsData.stations || []);
-                setCoordinates(coordsData.coordinates || {});
-                setLines(linesData.lines || {});
+                const data = await fetchInitialData();
+                setStations(data.stations);
+                setCoordinates(data.coordinates);
+                setLines(data.lines);
             } catch (error) {
                 console.error('Error fetching initial data:', error);
             }
         };
 
-        // Inicializar WebSocket
-        const initializeWebSocket = () => {
-            const socket = new WebSocket('ws://localhost:8000/ws');
-            
-            socket.onopen = () => {
-                console.log('WebSocket Connected');
-                if (mounted) setWs(socket);
-            };
-
-            socket.onmessage = (event) => {
-                if (!mounted) return;
-                const data = JSON.parse(event.data);
-                
-                if (data.type === "weather_update") {
-                    setWeatherConditions(data.weather_conditions);
-                } else if (data.weather_conditions) {
-                    setCurrentRoute(data);
-                    setWeatherConditions(data.weather_conditions);
-                }
-                setLoading(false);
-            };
-
-            socket.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                if (mounted) setError('Error en la conexión WebSocket');
-            };
-
-            return socket;
-        };
-
-        fetchInitialData();
-        const socket = initializeWebSocket();
-
-        return () => {
-            mounted = false;
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.close();
-            }
-        };
+        loadInitialData();
     }, []);
 
     const handleRouteRequest = () => {
@@ -367,10 +257,6 @@ export default function RouteWebSocket() {
     const toRad = (value: number) => {
         return value * Math.PI / 180;
     };
-
-    if (!isMounted) {
-        return null;
-    }
 
     if (!stations.length) {
         return (

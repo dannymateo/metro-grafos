@@ -2,22 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Route, MetroLines, WeatherCondition } from './RouteWebSocket';
 
-type MapComponentProps = {
-    stations: string[];
-    coordinates: Record<string, [number, number]>;
-    selectedRoute: Route | null;
-    lines: MetroLines;
-    userLocation?: [number, number];
-    nearestStation?: string;
-    weatherConditions?: Record<string, WeatherCondition>;
-}
+import { Props } from './types';
 
-export default function MapComponent({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation, weatherConditions }: MapComponentProps) {
+export default function MapComponent({ stations, coordinates, selectedRoute, lines, userLocation, nearestStation, weatherConditions }: Props) {
     const [isLoading, setIsLoading] = useState(true);
     
-    const MapWithNoSSR = dynamic(() => import('./Map'), {
+    const MapWithNoSSR = dynamic(() => import('@/components/Map/Map').then(mod => mod.default), {
         ssr: false,
         loading: () => (
             <div className="h-[600px] w-full relative rounded-xl overflow-hidden shadow-xl bg-gray-100 flex items-center justify-center">
