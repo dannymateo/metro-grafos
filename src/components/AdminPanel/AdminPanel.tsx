@@ -1,6 +1,3 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import {
     Card,
     CardHeader,
@@ -15,15 +12,11 @@ import {
     Chip
 } from "@nextui-org/react";
 import { History, ArrowRight } from 'lucide-react';
-import { Route } from './RouteWebSocket';
+
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { Props } from "./types";
 
-type AdminPanelProps = {
-    stations: string[];
-    onShowRoute: (route: Partial<Route>) => void;
-}
-
-export default function AdminPanel({ stations, onShowRoute }: AdminPanelProps) {
+export default function AdminPanel({ stations, onShowRoute }: Props) {
     const { routeHistory } = useWebSocket();
 
     if (!routeHistory?.length) {
@@ -70,7 +63,7 @@ export default function AdminPanel({ stations, onShowRoute }: AdminPanelProps) {
                                         size="sm"
                                         color="primary"
                                         variant="flat"
-                                        onClick={() => onShowRoute(route)}
+                                        onPress={() => onShowRoute(route)}
                                         startContent={<ArrowRight className="w-4 h-4" />}
                                     >
                                         Ver ruta

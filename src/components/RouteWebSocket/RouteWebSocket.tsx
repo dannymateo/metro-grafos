@@ -9,11 +9,6 @@ import {
     Divider,
     Chip,
     Spinner,
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
     Autocomplete,
     AutocompleteItem
 } from "@nextui-org/react";
@@ -21,108 +16,12 @@ import { MapPin, Navigation, Clock, Train, AlertCircle, ArrowRight, GitCommit, D
 
 import MapComponent from '@/components/MapComponent/MapComponent';
 import Image from 'next/image';
-import AdminPanel from './AdminPanel';
+import AdminPanel from '@/components/AdminPanel/AdminPanel';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { fetchInitialData } from '@/services/api';
-import { WeatherDetailsContent } from './WeatherDetailsContent/WeatherDetailsContent/WeatherDetailsContent';
-
-export type Route = {
-    path: string[];
-    coordinates: [number, number][];
-    num_stations: number;
-    lines: string[];
-    estimated_time: number;
-    total_distance: number;
-    transbordos: string[];
-    timestamp: string;
-    weather_impacts: any[];
-}
-
-export type MetroLines = {
-    [key: string]: {
-        color: string;
-        stations: string[];
-    };
-}
-
-export type WeatherReading = {
-    temperature: number;
-    humidity: number;
-    pressure: number;
-    visibility: number;
-};
-
-export type WeatherCondition = {
-    type: 'sunny' | 'cloudy' | 'rainy' | 'stormy';
-    intensity: number;
-    name: string;
-    icon: string;
-    location: [number, number];
-    readings: WeatherReading;
-    station_id: string;
-    last_updated: string;
-};
-
-const WeatherImpactInfo = ({ weatherImpacts }: { weatherImpacts: any[] }) => {
-    if (!weatherImpacts?.length) return null;
-    const [showDetails, setShowDetails] = useState(false);
-
-    const maxImpact = Math.max(...weatherImpacts.map(impact => 
-        Math.max(impact.conditions.origin.impact, impact.conditions.destination.impact)
-    ));
-
-    return (
-        <div className="mt-4">
-            <div className="bg-gradient-to-r from-blue-50 to-yellow-50 rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <AlertCircle className="w-5 h-5 text-yellow-500" />
-                        <div>
-                            <div className="text-sm font-medium text-gray-700">Clima en ruta</div>
-                            <div className="text-xs text-gray-500">{weatherImpacts.length} segmentos afectados</div>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Chip
-                            size="sm"
-                            variant="flat"
-                            color={maxImpact > 30 ? "danger" : maxImpact > 20 ? "warning" : "success"}
-                            className="text-xs"
-                            startContent={<Clock className="w-3 h-3" />}
-                        >
-                            +{maxImpact}% tiempo
-                        </Chip>
-                        <Button
-                            size="sm"
-                            variant="light"
-                            onPress={() => setShowDetails(true)}
-                        >
-                            Ver detalles
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            <Modal 
-                isOpen={showDetails} 
-                onClose={() => setShowDetails(false)}
-                size="md"
-            >
-                <ModalContent>
-                    <ModalHeader>Detalles del clima en la ruta</ModalHeader>
-                    <ModalBody>
-                        <WeatherDetailsContent weatherImpacts={weatherImpacts} />
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button color="primary" onPress={() => setShowDetails(false)}>
-                            Cerrar
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </div>
-    );
-};
+import { WeatherImpactInfo } from '@/components/WeatherDetailsContent';
+import { MetroLines } from './types';
+import { Route } from '@/types';
 
 export default function RouteWebSocket() {
     const { ws, weatherConditions, currentRoute, loading, error, setLoading, setError } = useWebSocket();

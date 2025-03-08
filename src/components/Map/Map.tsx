@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, memo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { WeatherCondition, WeatherReading } from '@/components/RouteWebSocket';
+import { WeatherCondition } from '@/types';
 import { Props } from './types';
 
 const WeatherOverlay = memo(({ weatherConditions }: { weatherConditions: Record<string, WeatherCondition> }) => {

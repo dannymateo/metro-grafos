@@ -1,4 +1,4 @@
-import RouteWebSocket from '../components/RouteWebSocket';
+import RouteWebSocket from '@/components/RouteWebSocket/RouteWebSocket';
 
 export default function Home() {
   return (
