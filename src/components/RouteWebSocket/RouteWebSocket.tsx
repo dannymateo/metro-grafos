@@ -113,7 +113,7 @@ export default function RouteWebSocket() {
                                 color="primary"
                                 variant="ghost"
                                 onClick={() => {
-                                    window.open(`https://dannymateoh.zapto.org/metro/graph?t=${Date.now()}`, '_blank')
+                                    window.open(`https://191.91.240.39/metro/graph?t=${Date.now()}`, '_blank')
                                 }}
                                 startContent={<Download className="w-4 h-4" />}
                                 className="w-full md:w-auto touch-target"
