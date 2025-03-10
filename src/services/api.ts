@@ -4,7 +4,7 @@ export const fetchInitialData = async () => {
     const [stationsRes, coordsRes, linesRes] = await Promise.all([
         fetch('http://191.91.240.39/metro/stations'),
         fetch('http://191.91.240.39/metro/coordinates'),
-        fetch('httpS://191.91.240.39/metro/lines')
+        fetch('http://191.91.240.39/metro/lines')
     ]);
 
     const stationsData = await stationsRes.json();

@@ -10,7 +10,7 @@ export const useWebSocket = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const socket = new WebSocket('wss://191.91.240.39/metro/ws');
+        const socket = new WebSocket('ws://191.91.240.39/metro/ws');
         
         socket.onopen = () => {
             console.log('WebSocket Connected');
