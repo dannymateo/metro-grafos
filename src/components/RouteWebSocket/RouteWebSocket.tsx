@@ -112,8 +112,8 @@ export default function RouteWebSocket() {
                             <Button
                                 color="primary"
                                 variant="ghost"
-                                onClick={() => {
-                                    window.open(`https://191.91.240.39/metro/graph?t=${Date.now()}`, '_blank')
+                                onPress={() => {
+                                    window.open(`http://191.91.240.39/metro/graph?t=${Date.now()}`, '_blank')
                                 }}
                                 startContent={<Download className="w-4 h-4" />}
                                 className="w-full md:w-auto touch-target"
@@ -175,7 +175,7 @@ export default function RouteWebSocket() {
 
                             <Button
                                 color="primary"
-                                onClick={handleRouteRequest}
+                                onPress={handleRouteRequest}
                                 isLoading={loading}
                                 disabled={!origin || !destination}
                                 className="w-full bg-gradient-to-r from-blue-700 to-blue-500 shadow-lg hover:shadow-blue-200 transition-all touch-target"
