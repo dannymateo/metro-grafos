@@ -2,19 +2,24 @@ from typing import Dict
 import asyncio
 import logging
 from datetime import datetime, timezone
-from app.models.weather import WeatherStation
-from app.config import WEATHER_UPDATE_INTERVAL, WEATHER_STATES, METRO_LINES
+from app.models.weather_monitoring import WeatherMonitoringSystem as BaseWeatherMonitoringSystem, WeatherStation
+from app.config import (
+    WEATHER_UPDATE_INTERVAL, 
+    WEATHER_STATES, 
+    METRO_LINES,
+    WEATHER_SPEED_FACTORS
+)
 import random
 
 logger = logging.getLogger(__name__)
 
-class WeatherMonitoringSystem:
+class WeatherMonitoringSystem(BaseWeatherMonitoringSystem):
+    """Extiende la clase base con funcionalidades específicas del servicio"""
+    
     def __init__(self):
-        self.stations: Dict[str, WeatherStation] = {}
-        self.initialize_stations()
-        self._cache = {}
-        self._last_update = None
+        super().__init__()
         self.connected_clients = set()
+        self._previous_weather = {}  # Para rastrear cambios en el clima
 
     def get_all_stations(self) -> Dict[str, list]:
         """Obtiene todas las estaciones y sus coordenadas de METRO_LINES"""
@@ -103,10 +108,38 @@ class WeatherMonitoringSystem:
         """Actualiza y transmite el clima periódicamente"""
         while True:
             try:
+                # Actualizar el clima
+                updated_conditions = self.update_weather()
+                
+                # Registrar cambios significativos en el clima
+                if self.metro_system:
+                    significant_changes = []
+                    for station_name, weather in updated_conditions.items():
+                        if station_name in self._previous_weather:
+                            prev_type = self._previous_weather[station_name].get('type')
+                            curr_type = weather.get('type')
+                            if prev_type != curr_type:
+                                significant_changes.append({
+                                    'station': station_name,
+                                    'from': prev_type,
+                                    'to': curr_type,
+                                    'impact': f"{round((1 - WEATHER_SPEED_FACTORS.get(curr_type, 1.0)) * 100)}%"
+                                })
+                    
+                    if significant_changes:
+                        logger.info(f"Cambios significativos en el clima: {len(significant_changes)} estaciones")
+                        for change in significant_changes:
+                            logger.info(f"Estación {change['station']}: {change['from']} → {change['to']} (impacto: {change['impact']})")
+                
+                # Guardar el estado actual para la próxima comparación
+                self._previous_weather = {k: v.copy() if isinstance(v, dict) else v for k, v in updated_conditions.items()}
+                
+                # Transmitir las actualizaciones a los clientes
                 await self.broadcast_weather()
+                
                 await asyncio.sleep(WEATHER_UPDATE_INTERVAL)
             except Exception as e:
-                logger.error(f"Error en actualización periódica del clima: {e}")
+                logger.error(f"Error en actualización periódica del clima: {e}", exc_info=True)
                 await asyncio.sleep(1)
 
 weather_monitoring_system = WeatherMonitoringSystem() 

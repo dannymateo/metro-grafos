@@ -12,7 +12,7 @@ import {
     Autocomplete,
     AutocompleteItem,
 } from "@nextui-org/react";
-import { MapPin, Navigation, Clock, Train, AlertCircle, ArrowRight, GitCommit, Download } from 'lucide-react';
+import { MapPin, Navigation, Clock, Train, AlertCircle, ArrowRight, GitCommit, Download, Info } from 'lucide-react';
 
 import MapComponent from '@/components/MapComponent/MapComponent';
 import Image from 'next/image';
@@ -69,17 +69,21 @@ export default function RouteWebSocket() {
     if (!stations.length) {
         return (
             <div className="container mx-auto px-4 py-8">
-                <div className="flex flex-col items-center justify-center gap-4 h-[400px]">
+                <div className="flex flex-col items-center justify-center gap-4 h-[300px]">
                     <Image 
                         src="/Logo.svg" 
                         alt="Metro de Medellín Logo" 
-                        width={58} 
-                        height={83}
-                        className="mb-4"
+                        width={50} 
+                        height={70}
+                        className="mb-2"
                     />
                     <Spinner 
-                        size="lg" 
+                        size="md" 
+                        color="primary"
                         label="Cargando estaciones..." 
+                        classNames={{
+                            label: "text-[#2B3990]"
+                        }}
                     />
                 </div>
             </div>
@@ -87,68 +91,72 @@ export default function RouteWebSocket() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-            <div className="container mx-auto mobile-spacing">
-                <Card className="mb-4 md:mb-8 glass-effect responsive-card">
-                    <CardBody>
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
+        <div className="min-h-screen bg-white rounded-xl overflow-hidden">
+            <div className="container mx-auto md:px-4 py-4 md:py-6">
+                <Card className="mb-4 shadow-sm">
+                    <CardBody className="py-3 md:py-4">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
+                            <div className="flex items-center gap-3 md:gap-4">
                                 <Image 
                                     src="/Logo.svg" 
                                     alt="Metro de Medellín Logo" 
                                     width={58} 
                                     height={83}
-                                    className="transition-transform hover:scale-105 w-12 md:w-[58px]"
+                                    className="w-10 md:w-[58px]"
                                 />
-                                <div>
-                                    <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">
+                                <div className="flex flex-col">
+                                    <h1 className="text-lg md:text-2xl font-semibold text-[#2B3990]">
                                         Metro de Medellín
                                     </h1>
-                                    <p className="text-sm md:text-base text-gray-600 mt-1">
+                                    <p className="text-xs md:text-sm text-gray-600">
                                         Sistema Inteligente de Rutas
                                     </p>
                                 </div>
                             </div>
-                            <Button
-                                color="primary"
-                                variant="ghost"
-                                onPress={() => {
-                                    window.open(`http://191.91.240.39/metro/graph?t=${Date.now()}`, '_blank')
-                                }}
-                                startContent={<Download className="w-4 h-4" />}
-                                className="w-full md:w-auto touch-target"
-                            >
-                                Ver Mapa del Sistema
-                            </Button>
+                            <div className="flex items-center w-full md:w-auto mt-2 md:mt-0">
+                                <Button
+                                    color="primary"
+                                    variant="flat"
+                                    onPress={() => {
+                                        window.open(`http://191.91.240.39/metro/graph?t=${Date.now()}`, '_blank')
+                                    }}
+                                    startContent={<Download className="w-3 h-3 md:w-4 md:h-4" />}
+                                    className="bg-[#2B3990] text-white hover:bg-[#232d73] transition-colors w-full md:w-auto"
+                                    size="sm"
+                                >
+                                    <span className="text-xs md:text-sm">Ver Mapa del Sistema</span>
+                                </Button>
+                            </div>
                         </div>
                     </CardBody>
                 </Card>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-                    <Card className="lg:col-span-1 glass-effect responsive-card order-2 lg:order-1">
-                        <CardHeader className="flex gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
+                    <Card className="lg:col-span-1 shadow-sm order-2 lg:order-1">
+                        <CardHeader className="flex gap-2 py-3">
                             <div className="flex flex-col">
-                                <p className="text-lg md:text-xl font-semibold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">
+                                <p className="text-base md:text-lg font-semibold text-[#2B3990]">
                                     Planifica tu viaje
                                 </p>
-                                <p className="text-xs md:text-sm text-gray-500">
+                                <p className="text-xs md:text-sm text-gray-600">
                                     Encuentra la mejor ruta para tu destino
                                 </p>
                             </div>
                         </CardHeader>
                         <Divider/>
-                        <CardBody className="space-y-4 md:space-y-6">
-                            <div className="space-y-4">
+                        <CardBody className="space-y-3 md:space-y-4 py-3 md:py-4">
+                            <div className="space-y-3">
                                 <Autocomplete
                                     label="Estación de origen"
                                     placeholder="¿Desde dónde?"
                                     selectedKey={origin}
                                     onSelectionChange={(key) => setOrigin(key as string)}
                                     className="flex-1"
-                                    startContent={<MapPin className="w-4 h-4" />}
+                                    startContent={<MapPin className="w-3 h-3 md:w-4 md:h-4 text-[#2B3990]" />}
+                                    size="sm"
                                 >
                                     {stations.map((station) => (
-                                        <AutocompleteItem key={station} value={station}>
+                                        <AutocompleteItem key={station} value={station} className="text-xs md:text-sm">
                                             {station}
                                         </AutocompleteItem>
                                     ))}
@@ -159,14 +167,11 @@ export default function RouteWebSocket() {
                                     placeholder="¿A dónde vas?"
                                     selectedKey={destination}
                                     onSelectionChange={(key) => setDestination(key as string)}
-                                    startContent={
-                                        <div className="flex items-center">
-                                            <Navigation className="text-red-500 w-4 h-4 md:w-5 md:h-5" />
-                                        </div>
-                                    }
+                                    startContent={<Navigation className="w-3 h-3 md:w-4 md:h-4 text-[#2B3990]" />}
+                                    size="sm"
                                 >
                                     {stations.map((station) => (
-                                        <AutocompleteItem key={station} value={station}>
+                                        <AutocompleteItem key={station} value={station} className="text-xs md:text-sm">
                                             {station}
                                         </AutocompleteItem>
                                     ))}
@@ -178,82 +183,82 @@ export default function RouteWebSocket() {
                                 onPress={handleRouteRequest}
                                 isLoading={loading}
                                 disabled={!origin || !destination}
-                                className="w-full bg-gradient-to-r from-blue-700 to-blue-500 shadow-lg hover:shadow-blue-200 transition-all touch-target"
-                                size="lg"
-                                endContent={!loading && <Navigation className="w-4 h-4 md:w-5 md:h-5" />}
+                                className="w-full bg-[#2B3990] text-white hover:bg-[#232d73] transition-colors"
+                                size="md"
+                                endContent={!loading && <Navigation className="w-3 h-3 md:w-4 md:h-4" />}
                             >
-                                {loading ? 'Calculando ruta...' : 'Buscar mejor ruta'}
+                                <span className="text-xs md:text-sm">
+                                    {loading ? 'Calculando ruta...' : 'Buscar mejor ruta'}
+                                </span>
                             </Button>
 
                             {error && (
-                                <div className="flex items-center gap-2 p-3 md:p-4 rounded-lg bg-red-50 text-red-600 border border-red-100 animate-fadeIn">
-                                    <AlertCircle className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+                                <div className="flex items-center gap-2 p-2 md:p-3 rounded-lg bg-red-50 text-red-600 border border-red-100">
+                                    <AlertCircle className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
                                     <span className="text-xs md:text-sm">{error}</span>
                                 </div>
                             )}
 
                             {currentRoute && (
-                                <Card className="bg-gradient-to-br from-blue-50 to-white border-none shadow-sm">
-                                    <CardBody className="space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <div className="flex items-center gap-3 bg-blue-100/50 p-3 rounded-lg">
-                                                <Clock className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+                                <Card className="border border-gray-100 shadow-sm">
+                                    <CardBody className="space-y-3 md:space-y-4 py-3 md:py-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+                                            <div className="flex items-center gap-2 md:gap-3 bg-gray-50 p-2 md:p-3 rounded-lg">
+                                                <Clock className="w-4 h-4 md:w-5 md:h-5 text-[#2B3990]" />
                                                 <div>
-                                                    <p className="text-xs md:text-sm text-blue-600 font-medium">Tiempo estimado</p>
-                                                    <p className="text-lg md:text-xl font-bold text-blue-900">
-                                                        {currentRoute.estimated_time} minutos
+                                                    <p className="text-xs md:text-sm text-[#2B3990] font-medium">Tiempo estimado</p>
+                                                    <p className="text-base md:text-lg font-bold text-[#2B3990]">
+                                                        {currentRoute.estimated_time} min
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3 bg-green-100/50 p-3 rounded-lg">
-                                                <MapPin className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+                                            <div className="flex items-center gap-2 md:gap-3 bg-gray-50 p-2 md:p-3 rounded-lg">
+                                                <MapPin className="w-4 h-4 md:w-5 md:h-5 text-[#2B3990]" />
                                                 <div>
-                                                    <p className="text-xs md:text-sm text-green-600 font-medium">Distancia total</p>
-                                                    <p className="text-lg md:text-xl font-bold text-green-900">
+                                                    <p className="text-xs md:text-sm text-[#2B3990] font-medium">Distancia total</p>
+                                                    <p className="text-base md:text-lg font-bold text-[#2B3990]">
                                                         {currentRoute.total_distance} km
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <Train className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                                                <span className="text-sm md:text-base font-medium text-blue-900">Líneas del recorrido</span>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-1 md:gap-2">
+                                                <Train className="w-3 h-3 md:w-4 md:h-4 text-[#2B3990]" />
+                                                <span className="text-xs md:text-sm font-medium text-[#2B3990]">Líneas del recorrido</span>
                                             </div>
-                                            <div className="flex flex-wrap gap-2">
+                                            <div className="flex flex-wrap gap-1 md:gap-2">
                                                 {currentRoute.lines.map((line) => (
                                                     <Chip
                                                         key={line}
                                                         style={{ 
                                                             backgroundColor: getLineColor(line),
-                                                            boxShadow: `0 2px 4px ${getLineColor(line)}40`
                                                         }}
-                                                        className="text-white font-medium transition-transform hover:scale-105"
+                                                        className="text-white font-medium text-xs"
                                                         size="sm"
-                                                        startContent={<GitCommit className="w-3 h-3 md:w-4 md:h-4" />}
+                                                        startContent={<GitCommit className="w-2 h-2 md:w-3 md:h-3" />}
                                                     >
-                                                        Línea {line}
+                                                        {line}
                                                     </Chip>
                                                 ))}
                                             </div>
                                         </div>
 
                                         {currentRoute.transbordos.length > 0 && (
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-2">
-                                                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
-                                                    <span className="text-sm md:text-base font-medium text-blue-900">Transbordos</span>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-[#2B3990]" />
+                                                    <span className="text-xs md:text-sm font-medium text-[#2B3990]">Transbordos</span>
                                                 </div>
-                                                <div className="flex flex-wrap gap-2">
+                                                <div className="flex flex-wrap gap-1 md:gap-2">
                                                     {currentRoute.transbordos.map((transbordo, index) => (
                                                         <Chip 
                                                             key={index} 
                                                             variant="flat" 
-                                                            color="warning"
+                                                            className="bg-gray-100 text-[#2B3990] text-xs"
                                                             size="sm"
-                                                            className="transition-transform hover:scale-105"
-                                                            startContent={<GitCommit className="w-3 h-3 md:w-4 md:h-4" />}
+                                                            startContent={<GitCommit className="w-2 h-2 md:w-3 md:h-3" />}
                                                         >
                                                             {transbordo}
                                                         </Chip>
@@ -263,14 +268,20 @@ export default function RouteWebSocket() {
                                         )}
 
                                         {currentRoute.weather_impacts && (
-                                            <WeatherImpactInfo weatherImpacts={currentRoute.weather_impacts} />
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <Info className="w-3 h-3 md:w-4 md:h-4 text-[#2B3990]" />
+                                                    <span className="text-xs md:text-sm font-medium text-[#2B3990]">Condiciones climáticas</span>
+                                                </div>
+                                                <WeatherImpactInfo weatherImpacts={currentRoute.weather_impacts} />
+                                            </div>
                                         )}
                                     </CardBody>
                                 </Card>
                             )}
                         </CardBody>
                     </Card>
-                    <Card className="lg:col-span-2 glass-effect responsive-card order-1 lg:order-2">
+                    <Card className="lg:col-span-2 shadow-sm order-1 lg:order-2 h-[300px] md:h-[400px] lg:h-auto">
                         <CardBody className="p-0">
                             <MapComponent 
                                 stations={stations}
@@ -283,7 +294,7 @@ export default function RouteWebSocket() {
                     </Card>
                 </div>
 
-                <div className="mt-4 md:mt-8">
+                <div className="mt-3 md:mt-6">
                     <AdminPanel 
                         stations={stations}
                         onShowRoute={(route) => setSelectedHistoryRoute(route as Route)}

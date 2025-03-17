@@ -1,7 +1,11 @@
 import matplotlib.pyplot as plt
 from io import BytesIO
 import networkx as nx
-from app.config import METRO_LINES, WEATHER_STATES
+from app.config import (
+    METRO_LINES, 
+    WEATHER_STATES, 
+    TRANSFER_VISUAL
+)
 
 def get_station_coordinates(station_name: str) -> list:
     """Obtiene las coordenadas de una estación desde METRO_LINES"""

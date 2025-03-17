@@ -11,7 +11,15 @@ import {
     Button,
     Chip
 } from "@nextui-org/react";
-import { History, ArrowRight } from 'lucide-react';
+import { 
+    History, 
+    ArrowRight, 
+    MapPin, 
+    Navigation, 
+    Clock, 
+    Train, 
+    Eye 
+} from 'lucide-react';
 
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { Props } from "./types";
@@ -24,32 +32,75 @@ export default function AdminPanel({ stations, onShowRoute }: Props) {
     }
 
     return (
-        <Card className="glass-effect responsive-card">
+        <Card className="shadow-sm">
             <CardHeader className="flex gap-3">
-                <History className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+                <History className="w-4 h-4 md:w-5 md:h-5 text-[#2B3990]" />
                 <div className="flex flex-col">
-                    <p className="text-lg md:text-xl font-semibold">Historial de rutas</p>
-                    <p className="text-xs md:text-sm text-gray-500">
+                    <p className="text-base md:text-lg font-semibold text-[#2B3990]">Historial de rutas</p>
+                    <p className="text-xs md:text-sm text-gray-600">
                         Últimas rutas calculadas
                     </p>
                 </div>
             </CardHeader>
-            <CardBody>
-                <div className="overflow-x-auto responsive-table">
-                    <Table aria-label="Historial de rutas">
+            <CardBody className="px-2 md:px-6">
+                <div className="overflow-x-auto -mx-2 md:mx-0">
+                    <Table 
+                        aria-label="Historial de rutas"
+                        classNames={{
+                            base: "min-w-full border-collapse",
+                            th: "bg-gray-50 text-[#2B3990] font-medium",
+                            td: "border-b border-gray-100"
+                        }}
+                        removeWrapper
+                    >
                         <TableHeader>
-                            <TableColumn className="text-xs md:text-sm">ORIGEN</TableColumn>
-                            <TableColumn className="text-xs md:text-sm">DESTINO</TableColumn>
-                            <TableColumn className="text-xs md:text-sm">TIEMPO</TableColumn>
-                            <TableColumn className="text-xs md:text-sm">LÍNEAS</TableColumn>
-                            <TableColumn className="text-xs md:text-sm">ACCIONES</TableColumn>
+                            <TableColumn className="text-xs md:text-sm whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 hidden md:block" />
+                                    <span>ORIGEN</span>
+                                </div>
+                            </TableColumn>
+                            <TableColumn className="text-xs md:text-sm whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                    <Navigation className="w-3 h-3 hidden md:block" />
+                                    <span>DESTINO</span>
+                                </div>
+                            </TableColumn>
+                            <TableColumn className="text-xs md:text-sm whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3 hidden md:block" />
+                                    <span>TIEMPO</span>
+                                </div>
+                            </TableColumn>
+                            <TableColumn className="text-xs md:text-sm whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                    <Train className="w-3 h-3 hidden md:block" />
+                                    <span>LÍNEAS</span>
+                                </div>
+                            </TableColumn>
+                            <TableColumn className="text-xs md:text-sm whitespace-nowrap">ACCIONES</TableColumn>
                         </TableHeader>
                         <TableBody>
                             {routeHistory.map((route, index) => (
                                 <TableRow key={index} className="text-xs md:text-sm">
-                                    <TableCell>{route.path[0]}</TableCell>
-                                    <TableCell>{route.path[route.path.length - 1]}</TableCell>
-                                    <TableCell>{route.estimated_time} min</TableCell>
+                                    <TableCell className="max-w-[100px] md:max-w-none truncate">
+                                        <div className="flex items-center gap-1">
+                                            <MapPin className="w-3 h-3 text-[#2B3990] hidden md:block" />
+                                            <span className="truncate">{route.path[0]}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="max-w-[100px] md:max-w-none truncate">
+                                        <div className="flex items-center gap-1">
+                                            <Navigation className="w-3 h-3 text-[#2B3990] hidden md:block" />
+                                            <span className="truncate">{route.path[route.path.length - 1]}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="whitespace-nowrap">
+                                        <div className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3 text-[#2B3990] hidden md:block" />
+                                            <span>{route.estimated_time} min</span>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
                                             {route.lines.map((line, i) => (
@@ -57,7 +108,8 @@ export default function AdminPanel({ stations, onShowRoute }: Props) {
                                                     key={i} 
                                                     size="sm" 
                                                     variant="flat"
-                                                    className="text-xs"
+                                                    className="bg-gray-100 text-[#2B3990] text-xs"
+                                                    startContent={<Train className="w-2 h-2 hidden md:block" />}
                                                 >
                                                     {line}
                                                 </Chip>
@@ -67,13 +119,13 @@ export default function AdminPanel({ stations, onShowRoute }: Props) {
                                     <TableCell>
                                         <Button
                                             size="sm"
-                                            color="primary"
                                             variant="flat"
                                             onPress={() => onShowRoute(route)}
-                                            startContent={<ArrowRight className="w-3 h-3 md:w-4 md:h-4" />}
-                                            className="text-xs md:text-sm touch-target"
+                                            startContent={<Eye className="w-3 h-3" />}
+                                            className="bg-[#2B3990] text-white hover:bg-[#232d73] transition-colors text-xs min-w-0 px-2 md:px-3"
                                         >
-                                            Ver ruta
+                                            <span className="hidden md:inline">Ver ruta</span>
+                                            <span className="md:hidden">Ver</span>
                                         </Button>
                                     </TableCell>
                                 </TableRow>

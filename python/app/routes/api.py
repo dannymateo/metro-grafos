@@ -6,6 +6,7 @@ from app.services.weather_service import weather_monitoring_system
 from app.services.metro_service import metro_system
 from app.utils.graph_utils import generate_graph_visualization
 from app.config import METRO_LINES
+from datetime import datetime, timezone
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -186,4 +187,53 @@ async def get_station_info(station_name: str):
             "weather": weather,
             "connections": list(metro_system.metro_graph.neighbors(station_name))
         }
-    } 
+    }
+
+@router.get("/route/weather-impact")
+async def get_weather_impact(origin: str, destination: str):
+    """Calcular el impacto del clima en una ruta específica"""
+    logger.info(f"Solicitud de impacto del clima en ruta: {origin} -> {destination}")
+    
+    if not origin or not destination:
+        return {
+            "status": "error",
+            "message": "Origen y destino son requeridos"
+        }
+    
+    impact = metro_system.get_weather_impact_on_route(origin, destination)
+    
+    if "error" in impact:
+        return {
+            "status": "error",
+            "message": impact["error"]
+        }
+    
+    return {
+        "status": "success",
+        "impact": impact
+    }
+
+@router.post("/weather/force-update")
+async def force_weather_update():
+    """Forzar una actualización del clima y recalcular los pesos del grafo"""
+    try:
+        # Forzar actualización del clima
+        weather_monitoring_system._last_update = None  # Resetear el tiempo de última actualización
+        updated_conditions = weather_monitoring_system.update_weather()
+        
+        # Transmitir a los clientes conectados
+        if weather_monitoring_system.connected_clients:
+            await weather_monitoring_system.broadcast_weather()
+        
+        return {
+            "status": "success",
+            "message": "Clima actualizado y pesos recalculados",
+            "stations_updated": len(updated_conditions),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error al forzar actualización del clima: {e}", exc_info=True)
+        return {
+            "status": "error",
+            "message": f"Error: {str(e)}"
+        } 

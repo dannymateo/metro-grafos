@@ -5,6 +5,62 @@ WEATHER_UPDATE_INTERVAL = 15  # segundos
 MAX_HISTORY_SIZE = 10
 DEFAULT_COORDINATES = (6.2442, -75.5812)
 
+# Factores de velocidad según el clima
+WEATHER_SPEED_FACTORS = {
+    "sunny": 1.0,      # Velocidad normal
+    "cloudy": 0.9,     # 10% más lento
+    "rainy": 0.75,     # 25% más lento
+    "stormy": 0.6      # 40% más lento
+}
+
+# Velocidades promedio por tipo de transporte (km/h)
+TRANSPORT_SPEEDS = {
+    "metro": 35.0,    # Metro: 35 km/h promedio
+    "cable": 18.0,    # Metrocable: 18 km/h promedio
+    "tranvia": 20.0,   # Tranvía: 20 km/h promedio
+    "bus": 40.0       # Bus: 40 km/h promedio
+}
+
+# Mapeo de líneas a tipos de transporte
+LINE_TRANSPORT_TYPES = {
+    "A": "metro", "B": "metro",
+    "H": "cable", "J": "cable", "K": "cable",
+    "L": "cable", "M": "cable", "P": "cable",
+    "TA": "tranvia",
+    "C1": "bus", "C2": "bus", "C3": "bus", "C4": "bus", "C5": "bus"
+}
+
+# Tiempo de transbordo en minutos
+TRANSFER_TIME = 3.0
+
+# Conexiones de transbordo entre estaciones
+TRANSFER_CONNECTIONS = [
+    # Conexiones entre Metro y Metrocable
+    ("Estación de metro Acevedo", "Estación de metro cable Acevedo"),  # Líneas A y K/P
+    ("Estación de metro San Javier", "Estación de metro cable San Javier"),  # Líneas B y J
+    
+    # Conexiones con el Tranvía
+    ("Estación de metro San Antonio", "Estación de tranvia San Antonio"),  # Líneas A/B y TA
+    ("Estación de tranvia Oriente", "Estación de metro cable Oriente"),  # Líneas TA y H
+    
+    # Conexiones entre Metro y Bus
+    ("Estación de metro Poblado", "Estación de bus El Poblado"),  # Metro A con Bus C2
+    ("Estación de metro Aguacatala", "Estación de bus Aguacatala"),  # Metro A con Bus C4
+    ("Estación de metro Envigado", "Estación de bus Envigado"),  # Metro A con Bus C4
+    ("Estación de metro Exposiciones", "Estación de bus Exposiciones"),  # Metro A con Bus C1
+    ("Estación de metro Floresta", "Estación de bus Floresta"),  # Metro B con Bus C3
+    ("Estación de metro Santa Lucía", "Estación de bus Santa Lucía"),  # Metro B con Bus C3
+    ("Estación de metro San Javier", "Estación de bus San Javier"),  # Metro B con Bus C3
+    ("Estación de metro Niquía", "Estación de bus Niquía"),  # Metro A con Bus C5
+    ("Estación de metro Madera", "Estación de bus Madera"),  # Metro A con Bus C5
+]
+
+# Configuración visual para transbordos
+TRANSFER_VISUAL = {
+    "line": "transbordo",
+    "color": "gray"
+}
+
 # Definir líneas del metro con sus coordenadas
 METRO_LINES = {
     "A": {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, memo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { WeatherCondition } from '@/types';
@@ -16,40 +16,58 @@ const WeatherOverlay = memo(({ weatherConditions }: { weatherConditions: Record<
         if (!map) return;
 
         const checkMap = () => {
-            if (map && map.getZoom() !== undefined) {
+            if (map && map.getContainer() && map.getZoom() !== undefined) {
                 setIsMapReady(true);
             }
         };
 
-        map.whenReady(checkMap);
+        checkMap();
+        map.on('load', checkMap);
+        map.on('moveend', checkMap);
+
         return () => {
-            map.off('ready', checkMap);
+            map.off('load', checkMap);
+            map.off('moveend', checkMap);
         };
     }, [map]);
 
     useEffect(() => {
         if (!isMapReady || !map || !weatherConditions) return;
 
-        // Limpiar marcadores existentes
-        Object.values(markersRef.current).forEach(marker => marker.remove());
-        markersRef.current = {};
+        try {
+            Object.values(markersRef.current).forEach(marker => {
+                if (marker && marker.remove) {
+                    marker.remove();
+                }
+            });
+            markersRef.current = {};
 
-        // Añadir nuevos marcadores
-        Object.entries(weatherConditions).forEach(([station, condition]) => {
-            const coords = condition.location;
-            if (!coords) return;
+            Object.entries(weatherConditions).forEach(([station, condition]) => {
+                const coords = condition.location;
+                if (!coords) return;
 
-            if (!markersRef.current[station]) {
-                const marker = createWeatherMarker(station, condition);
-                markersRef.current[station] = marker;
-                marker.addTo(map);
-            } else {
-                updateWeatherMarker(markersRef.current[station], condition);
-            }
-        });
+                try {
+                    if (!markersRef.current[station]) {
+                        const marker = createWeatherMarker(station, condition);
+                        markersRef.current[station] = marker;
+                        marker.addTo(map);
+                    } else {
+                        updateWeatherMarker(markersRef.current[station], condition);
+                    }
+                } catch (err) {
+                    console.error(`Error al crear/actualizar marcador para ${station}:`, err);
+                }
+            });
+        } catch (err) {
+            console.error('Error al actualizar marcadores del clima:', err);
+        }
 
         return () => {
-            Object.values(markersRef.current).forEach(marker => marker.remove());
+            Object.values(markersRef.current).forEach(marker => {
+                if (marker && marker.remove) {
+                    marker.remove();
+                }
+            });
         };
     }, [map, isMapReady, weatherConditions]);
 
@@ -239,6 +257,90 @@ const Map = ({ stations, coordinates, selectedRoute, lines, weatherConditions }:
         );
     };
 
+    const createStartIcon = () => {
+        return L.divIcon({
+            className: 'custom-station-icon',
+            html: `
+                <div style="
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background-color: #4CAF50;
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    box-shadow: 0 0 16px rgba(0,0,0,0.8);
+                    color: white;
+                    font-size: 16px;
+                ">
+                    🚩
+                </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
+    };
+
+    const createEndIcon = () => {
+        return L.divIcon({
+            className: 'custom-station-icon',
+            html: `
+                <div style="
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background-color: #FF3B30;
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    box-shadow: 0 0 16px rgba(0,0,0,0.8);
+                    color: white;
+                    font-size: 16px;
+                ">
+                    🏁
+                </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
+    };
+
+    const renderRouteEndpoints = () => {
+        if (!selectedRoute || !selectedRoute.path || selectedRoute.path.length < 2) return null;
+
+        const startStation = selectedRoute.path[0];
+        const endStation = selectedRoute.path[selectedRoute.path.length - 1];
+        const startCoords = coordinates[startStation];
+        const endCoords = coordinates[endStation];
+
+        return (
+            <>
+                {startCoords && (
+                    <Marker 
+                        position={startCoords}
+                        icon={createStartIcon()}
+                        zIndexOffset={1000}
+                    >
+                        <Popup className="station-popup">
+                            <div className="font-semibold text-gray-900">Inicio: {startStation}</div>
+                        </Popup>
+                    </Marker>
+                )}
+                {endCoords && (
+                    <Marker 
+                        position={endCoords}
+                        icon={createEndIcon()}
+                        zIndexOffset={1000}
+                    >
+                        <Popup className="station-popup">
+                            <div className="font-semibold text-gray-900">Destino: {endStation}</div>
+                        </Popup>
+                    </Marker>
+                )}
+            </>
+        );
+    };
+
     if (!isClient) {
         return <div className="h-[600px] w-full relative rounded-xl overflow-hidden shadow-xl bg-gray-100" />;
     }
@@ -263,6 +365,10 @@ const Map = ({ stations, coordinates, selectedRoute, lines, weatherConditions }:
                     const coords = coordinates[station];
                     if (coords) {
                         const isSelected = selectedRoute?.path.includes(station);
+                        const isEndpoint = selectedRoute && (station === selectedRoute.path[0] || station === selectedRoute.path[selectedRoute.path.length - 1]);
+                        
+                        // No mostrar el marcador normal si es un punto final de la ruta
+                        if (isEndpoint) return null;
                         
                         return (
                             <Marker 
@@ -278,7 +384,8 @@ const Map = ({ stations, coordinates, selectedRoute, lines, weatherConditions }:
                     }
                     return null;
                 })}
-                {weatherConditions && (
+                {renderRouteEndpoints()}
+                {weatherConditions && isClient && (
                     <WeatherOverlay weatherConditions={weatherConditions} />
                 )}
             </MapContainer>

@@ -13,4 +13,6 @@ try:
     logger.info("Sistema de metro inicializado correctamente")
 except Exception as e:
     logger.error(f"Error al inicializar el sistema de metro: {e}", exc_info=True)
-    raise 
+    raise
+
+# La referencia circular se establecerá en el archivo __init__.py del paquete services 

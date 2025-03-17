@@ -3,36 +3,21 @@ from typing import Dict, List, Tuple
 from datetime import datetime, timezone
 import random
 from math import radians, sin, cos, sqrt, atan2
-from app.config import METRO_LINES
+from app.config import (
+    METRO_LINES, 
+    WEATHER_SPEED_FACTORS, 
+    TRANSPORT_SPEEDS, 
+    LINE_TRANSPORT_TYPES,
+    TRANSFER_CONNECTIONS,
+    TRANSFER_TIME,
+    TRANSFER_VISUAL
+)
 from app.models.weather_monitoring import WeatherMonitoringSystem
 import logging
 
 logger = logging.getLogger(__name__)
 
 class MetroSystem:
-    # Definir constantes de clase
-    WEATHER_SPEED_FACTORS = {
-        "sunny": 1.0,      # Velocidad normal
-        "cloudy": 0.9,     # 10% más lento
-        "rainy": 0.75,     # 25% más lento
-        "stormy": 0.6      # 40% más lento
-    }
-
-    SPEEDS = {
-        "metro": 35.0,    # Metro: 35 km/h promedio
-        "cable": 18.0,    # Metrocable: 18 km/h promedio
-        "tranvia": 20.0,   # Tranvía: 20 km/h promedio
-        "bus": 40.0       # Bus: 40 km/h promedio
-    }
-
-    LINE_TYPES = {
-        "A": "metro", "B": "metro",
-        "H": "cable", "J": "cable", "K": "cable",
-        "L": "cable", "M": "cable", "P": "cable",
-        "TA": "tranvia",
-        "C1": "bus", "C2": "bus", "C3": "bus", "C4": "bus", "C5": "bus"
-    }
-
     def __init__(self):
         self.metro_graph = nx.Graph()
         self.current_route = None
@@ -71,18 +56,32 @@ class MetroSystem:
             return 1.0
             
         distance = self.calculate_distance(coords1[0], coords1[1], coords2[0], coords2[1])
-        base_speed = self.SPEEDS[self.LINE_TYPES.get(line, "metro")]
+        
+        # Obtener el tipo de transporte y su velocidad base desde la configuración
+        transport_type = LINE_TRANSPORT_TYPES.get(line, "metro")
+        base_speed = TRANSPORT_SPEEDS.get(transport_type, 35.0)
 
+        # Obtener condiciones climáticas de ambas estaciones
         weather1 = self.weather_conditions.get(station1, {'type': 'sunny'})
         weather2 = self.weather_conditions.get(station2, {'type': 'sunny'})
         
-        weather_factor = min(
-            self.WEATHER_SPEED_FACTORS.get(weather1.get('type', 'sunny'), 1.0),
-            self.WEATHER_SPEED_FACTORS.get(weather2.get('type', 'sunny'), 1.0)
-        )
+        # Usar el clima más severo entre las dos estaciones
+        weather1_type = weather1.get('type', 'sunny')
+        weather2_type = weather2.get('type', 'sunny')
         
+        # Añadir un poco de variabilidad a los factores del clima
+        weather_factor1 = WEATHER_SPEED_FACTORS.get(weather1_type, 1.0) * random.uniform(0.95, 1.05)
+        weather_factor2 = WEATHER_SPEED_FACTORS.get(weather2_type, 1.0) * random.uniform(0.95, 1.05)
+        
+        # Usar el factor más bajo (peor clima)
+        weather_factor = min(weather_factor1, weather_factor2)
+        
+        # Añadir un poco de variabilidad al tiempo de viaje
         adjusted_speed = base_speed * weather_factor
         travel_time = (distance / adjusted_speed) * 60  # Convertir a minutos
+        
+        # Añadir un pequeño factor aleatorio para simular variabilidad en condiciones de tráfico
+        travel_time *= random.uniform(0.95, 1.05)
 
         return max(travel_time, 0.5)
 
@@ -218,12 +217,12 @@ class MetroSystem:
                             "origin": {
                                 "station": station1,
                                 "weather": weather1['name'],
-                                "impact": round((1 - self.WEATHER_SPEED_FACTORS[weather1['type']]) * 100)
+                                "impact": round((1 - WEATHER_SPEED_FACTORS[weather1['type']]) * 100)
                             },
                             "destination": {
                                 "station": station2,
                                 "weather": weather2['name'],
-                                "impact": round((1 - self.WEATHER_SPEED_FACTORS[weather2['type']]) * 100)
+                                "impact": round((1 - WEATHER_SPEED_FACTORS[weather2['type']]) * 100)
                             }
                         }
                     })
@@ -280,80 +279,94 @@ class MetroSystem:
             self.metro_graph[station1][station2]['weight'] = time
 
     def _add_transfer_stations(self):
-        """Añade conexiones entre estaciones que permiten transbordo entre diferentes líneas"""
-        logger.info("Añadiendo conexiones de transbordo entre líneas...")
+        """Añade conexiones entre estaciones de diferentes líneas (transbordos)"""
+        logger.info("Añadiendo conexiones de transbordo entre líneas")
         
-        # Mapeo de estaciones a sus líneas
-        station_lines = {}
-        
-        # Primero identificamos todas las estaciones y sus líneas
-        for line_id, line_info in METRO_LINES.items():
-            for station in line_info["stations"].keys():
-                if station not in station_lines:
-                    station_lines[station] = []
-                station_lines[station].append(line_id)
-        
-        # Identificar estaciones de transbordo (presentes en múltiples líneas)
-        transfer_stations = {
-            station: lines for station, lines in station_lines.items() 
-            if len(lines) > 1
-        }
-        
-        # Crear conexiones de transbordo
-        for station, lines in transfer_stations.items():
-            logger.info(f"Procesando estación de transbordo: {station} - Líneas: {lines}")
-            
-            # Conectar la estación con todas sus versiones en otras líneas
-            for line1 in lines:
-                for line2 in lines:
-                    if line1 < line2:  # Evitar duplicados
-                        # Verificar si las estaciones existen en el grafo
-                        if station in self.metro_graph:
-                            # Añadir conexión de transbordo
-                            self.metro_graph.add_edge(
-                                station,
-                                station,
-                                line='transbordo',
-                                color='gray',
-                                weight=3.0  # 3 minutos para transbordo
-                            )
-                            logger.info(f"Añadida conexión de transbordo en {station} entre líneas {line1} y {line2}")
-
-        # Conexiones especiales entre líneas
-        special_connections = [
-            # Conexiones entre Metro y Metrocable
-            ("Estación de metro Acevedo", "Estación de metro cable Acevedo"),  # Líneas A y K/P
-            ("Estación de metro San Javier", "Estación de metro cable San Javier"),  # Líneas B y J
-            
-            # Conexiones con el Tranvía
-            ("Estación de metro San Antonio", "Estación de tranvia San Antonio"),  # Líneas A/B y TA
-            ("Estación de tranvia Oriente", "Estación de metro cable Oriente"),  # Líneas TA y H
-            
-            # Otras conexiones importantes
-            ("Estación de metro Industriales", "Estación de bus Industriales"),  # Metro A con Bus C2
-            ("Estación de metro Poblado", "Estación de bus El Poblado"),  # Metro A con Bus C2
-            ("Estación de metro Aguacatala", "Estación de bus Aguacatala"),  # Metro A con Bus C4
-            ("Estación de metro Envigado", "Estación de bus Envigado"),  # Metro A con Bus C4
-            ("Estación de metro Exposiciones", "Estación de bus Exposiciones"),  # Metro A con Bus C1
-            ("Estación de metro Floresta", "Estación de bus Floresta"),  # Metro B con Bus C3
-            ("Estación de metro Santa Lucía", "Estación de bus Santa Lucía"),  # Metro B con Bus C3
-            ("Estación de metro San Javier", "Estación de bus San Javier"),  # Metro B con Bus C3
-            ("Estación de metro Niquía", "Estación de bus Niquía"),  # Metro A con Bus C5
-            ("Estación de metro Madera", "Estación de bus Madera"),  # Metro A con Bus C5
-        ]
-        
-        # Añadir conexiones especiales
-        for station1, station2 in special_connections:
+        # Añadir conexiones de transbordo desde la configuración
+        for station1, station2 in TRANSFER_CONNECTIONS:
             if station1 in self.metro_graph and station2 in self.metro_graph:
                 self.metro_graph.add_edge(
                     station1,
                     station2,
-                    line='transbordo',
-                    color='gray',
-                    weight=3.0  # 3 minutos para transbordo
+                    line=TRANSFER_VISUAL["line"],
+                    color=TRANSFER_VISUAL["color"],
+                    weight=TRANSFER_TIME
                 )
-                logger.info(f"Añadida conexión especial entre {station1} y {station2}")
+                logger.info(f"Añadida conexión de transbordo entre {station1} y {station2}")
         
         logger.info(f"Completada la adición de conexiones de transbordo. Total de aristas: {len(self.metro_graph.edges())}")
+
+    def get_weather_impact_on_route(self, origin: str, destination: str) -> dict:
+        """
+        Calcula el impacto del clima en una ruta específica.
+        Compara el tiempo de viaje con clima actual vs. clima soleado.
+        """
+        try:
+            # Guardar el clima actual
+            current_weather = self.weather_conditions.copy()
+            
+            # Calcular ruta con clima actual
+            route_with_weather = self.find_route(origin, destination)
+            if not route_with_weather:
+                return {"error": "No se pudo encontrar una ruta"}
+            
+            time_with_weather = route_with_weather["estimated_time"]
+            
+            # Simular clima soleado para todas las estaciones
+            sunny_weather = {}
+            for station in self.weather_conditions:
+                sunny_weather[station] = {
+                    "type": "sunny",
+                    "name": "Soleado",
+                    "icon": "☀️",
+                    "intensity": 1.0
+                }
+            
+            # Aplicar clima soleado temporalmente
+            self.weather_conditions = sunny_weather
+            
+            # Recalcular pesos con clima soleado
+            for station1, station2, data in self.metro_graph.edges(data=True):
+                time = self.calculate_travel_time(station1, station2, data['line'])
+                self.metro_graph[station1][station2]['weight'] = time
+            
+            # Calcular ruta con clima soleado
+            route_sunny = self.find_route(origin, destination)
+            time_sunny = route_sunny["estimated_time"] if route_sunny else 0
+            
+            # Restaurar clima original
+            self.weather_conditions = current_weather
+            
+            # Restaurar pesos originales
+            for station1, station2, data in self.metro_graph.edges(data=True):
+                time = self.calculate_travel_time(station1, station2, data['line'])
+                self.metro_graph[station1][station2]['weight'] = time
+            
+            # Calcular impacto
+            if time_sunny > 0:
+                delay = time_with_weather - time_sunny
+                delay_percent = (delay / time_sunny) * 100
+                
+                return {
+                    "route": route_with_weather["path"],
+                    "time_with_weather": time_with_weather,
+                    "time_sunny": time_sunny,
+                    "delay_minutes": round(delay, 1),
+                    "delay_percent": round(delay_percent, 1),
+                    "weather_conditions": [
+                        {
+                            "station": station,
+                            "weather": self.weather_conditions.get(station, {}).get("name", "Desconocido"),
+                            "type": self.weather_conditions.get(station, {}).get("type", "sunny")
+                        }
+                        for station in route_with_weather["path"]
+                    ]
+                }
+            
+            return {"error": "Error al calcular el impacto del clima"}
+        
+        except Exception as e:
+            logger.error(f"Error al calcular impacto del clima: {e}", exc_info=True)
+            return {"error": str(e)}
 
 metro_system = MetroSystem() 
