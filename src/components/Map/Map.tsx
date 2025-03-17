@@ -172,7 +172,12 @@ const Map = ({ stations, coordinates, selectedRoute, lines, weatherConditions }:
         if (!lines) return null;
         
         return Object.entries(lines).map(([lineName, lineInfo]) => {
-            const lineCoordinates = lineInfo.stations
+            // Verificar si stations es un array o un objeto
+            const stationsArray = Array.isArray(lineInfo.stations) 
+                ? lineInfo.stations 
+                : Object.keys(lineInfo.stations);
+
+            const lineCoordinates = stationsArray
                 .map(station => coordinates[station])
                 .filter(coord => coord !== undefined);
 

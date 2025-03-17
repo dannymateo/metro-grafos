@@ -3,8 +3,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from app.models.weather import WeatherStation
-from app.config import WEATHER_UPDATE_INTERVAL, WEATHER_STATES
-from data.coordinates import STATION_COORDINATES
+from app.config import WEATHER_UPDATE_INTERVAL, WEATHER_STATES, METRO_LINES
 import random
 
 logger = logging.getLogger(__name__)
@@ -17,8 +16,16 @@ class WeatherMonitoringSystem:
         self._last_update = None
         self.connected_clients = set()
 
+    def get_all_stations(self) -> Dict[str, list]:
+        """Obtiene todas las estaciones y sus coordenadas de METRO_LINES"""
+        all_stations = {}
+        for line_info in METRO_LINES.values():
+            all_stations.update(line_info["stations"])
+        return all_stations
+
     def initialize_stations(self):
-        for station_name, coords in STATION_COORDINATES.items():
+        stations_coords = self.get_all_stations()
+        for station_name, coords in stations_coords.items():
             station_id = f"MDE-{abs(hash(station_name)) % 1000:03d}"
             self.stations[station_name] = WeatherStation(
                 station_id=station_id,

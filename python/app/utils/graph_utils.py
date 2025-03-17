@@ -1,8 +1,14 @@
 import matplotlib.pyplot as plt
 from io import BytesIO
 import networkx as nx
-from data.coordinates import STATION_COORDINATES
-from app.config import METRO_LINES
+from app.config import METRO_LINES, WEATHER_STATES
+
+def get_station_coordinates(station_name: str) -> list:
+    """Obtiene las coordenadas de una estación desde METRO_LINES"""
+    for line_info in METRO_LINES.values():
+        if station_name in line_info["stations"]:
+            return line_info["stations"][station_name]
+    return None
 
 def generate_graph_visualization(metro_system):
     """
@@ -15,14 +21,15 @@ def generate_graph_visualization(metro_system):
     G = metro_system.metro_graph.copy()
     
     # Obtener posiciones para el layout usando las coordenadas reales
-    pos = {station: [STATION_COORDINATES[station][1], STATION_COORDINATES[station][0]] 
+    pos = {station: [get_station_coordinates(station)[1], get_station_coordinates(station)[0]] 
            for station in G.nodes()}
     
     # Dibujar las líneas del metro con diferentes colores
     for line_name, line_info in METRO_LINES.items():
+        stations = list(line_info["stations"].keys())
         edge_list = [
             (station1, station2)
-            for station1, station2 in zip(line_info["stations"], line_info["stations"][1:])
+            for station1, station2 in zip(stations, stations[1:])
             if G.has_edge(station1, station2)
         ]
         nx.draw_networkx_edges(G, pos, edgelist=edge_list, 

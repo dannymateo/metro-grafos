@@ -49,13 +49,10 @@ export const WeatherImpactInfo = ({ weatherImpacts }: { weatherImpacts: WeatherI
                 isOpen={showDetails} 
                 onClose={() => setShowDetails(false)}
                 size="md"
-                className="glass-effect"
             >
                 <ModalContent>
-                    <ModalHeader className="text-base md:text-lg">
-                        Detalles del clima en la ruta
-                    </ModalHeader>
-                    <ModalBody>
+                    <ModalBody className="bg-gradient-to-r from-blue-50 to-yellow-50 rounded-lg p-2 md:p-3">
+                        <h1 className="text-lg font-bold">Detalles del clima en la ruta</h1>
                         <WeatherDetailsContent weatherImpacts={weatherImpacts} />
                     </ModalBody>
                     <ModalFooter>

@@ -6,7 +6,6 @@ from app.services.weather_service import weather_monitoring_system
 from app.services.metro_service import metro_system
 from app.utils.graph_utils import generate_graph_visualization
 from app.config import METRO_LINES
-from data.coordinates import STATION_COORDINATES
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -17,7 +16,7 @@ async def websocket_endpoint(websocket: WebSocket):
     weather_monitoring_system.connected_clients.add(websocket)
     
     try:
-        # Enviar datos iniciales: clima y historial de rutas
+        # Enviar datos iniciales
         initial_data = {
             "type": "initial_data",
             "data": {
@@ -28,11 +27,18 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json(initial_data)
         
         while True:
-            data = json.loads(await websocket.receive_text())
-            origin = data.get("origin")
-            destination = data.get("destination")
-            
-            if origin and destination:
+            try:
+                data = await websocket.receive_json()
+                origin = data.get("origin")
+                destination = data.get("destination")
+                
+                if not origin or not destination:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Origen y destino son requeridos"
+                    })
+                    continue
+                
                 route = metro_system.find_route(origin, destination)
                 if route:
                     # Enviar la nueva ruta a todos los clientes conectados
@@ -50,6 +56,12 @@ async def websocket_endpoint(websocket: WebSocket):
                         "message": "No se encontró una ruta disponible"
                     })
                     
+            except json.JSONDecodeError:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "Formato de mensaje inválido"
+                })
+                
     except WebSocketDisconnect:
         weather_monitoring_system.connected_clients.remove(websocket)
     except Exception as e:
@@ -76,7 +88,10 @@ async def get_stations():
 @router.get("/coordinates")
 async def get_coordinates():
     """Obtener coordenadas de todas las estaciones"""
-    return {"coordinates": STATION_COORDINATES}
+    all_stations = {}
+    for line_info in METRO_LINES.values():
+        all_stations.update(line_info["stations"])
+    return {"coordinates": all_stations}
 
 @router.get("/lines")
 async def get_lines():
@@ -114,12 +129,23 @@ async def get_graph():
 @router.get("/route")
 async def get_route(origin: str, destination: str):
     """Calcular ruta entre dos estaciones"""
+    logger.info(f"Solicitud de ruta: {origin} -> {destination}")
+    
+    if not origin or not destination:
+        return {
+            "status": "error",
+            "message": "Origen y destino son requeridos"
+        }
+    
     route = metro_system.find_route(origin, destination)
     if route:
+        logger.info(f"Ruta encontrada con {len(route['path'])} estaciones")
         return {
             "status": "success",
             "route": route
         }
+    
+    logger.error(f"No se encontró ruta entre {origin} y {destination}")
     return {
         "status": "error",
         "message": "No se encontró una ruta disponible"
@@ -128,20 +154,25 @@ async def get_route(origin: str, destination: str):
 @router.get("/station/{station_name}")
 async def get_station_info(station_name: str):
     """Obtener información detallada de una estación específica"""
-    if station_name not in STATION_COORDINATES:
-        return {
-            "status": "error",
-            "message": "Estación no encontrada"
-        }
-    
-    # Obtener líneas que pasan por la estación
+    # Buscar la estación en todas las líneas
+    station_found = False
+    station_coordinates = None
     station_lines = []
+    
     for line_name, line_info in METRO_LINES.items():
         if station_name in line_info["stations"]:
+            station_found = True
+            station_coordinates = line_info["stations"][station_name]
             station_lines.append({
                 "line": line_name,
                 "color": line_info["color"]
             })
+    
+    if not station_found:
+        return {
+            "status": "error",
+            "message": "Estación no encontrada"
+        }
     
     # Obtener clima actual de la estación
     weather = weather_monitoring_system.update_weather().get(station_name, {})
@@ -150,7 +181,7 @@ async def get_station_info(station_name: str):
         "status": "success",
         "station_info": {
             "name": station_name,
-            "coordinates": STATION_COORDINATES[station_name],
+            "coordinates": station_coordinates,
             "lines": station_lines,
             "weather": weather,
             "connections": list(metro_system.metro_graph.neighbors(station_name))
