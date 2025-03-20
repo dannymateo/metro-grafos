@@ -27,7 +27,7 @@ LINE_TRANSPORT_TYPES = {
     "H": "cable", "J": "cable", "K": "cable",
     "L": "cable", "M": "cable", "P": "cable",
     "TA": "tranvia",
-    "C1": "bus", "C2": "bus", "C3": "bus", "C4": "bus", "C5": "bus"
+    "0": "bus", "1": "bus", "2": "bus"
 }
 
 # Tiempo de transbordo en minutos
@@ -35,24 +35,46 @@ TRANSFER_TIME = 3.0
 
 # Conexiones de transbordo entre estaciones
 TRANSFER_CONNECTIONS = [
-    # Conexiones entre Metro y Metrocable
-    ("Estación de metro Acevedo", "Estación de metro cable Acevedo"),  # Líneas A y K/P
-    ("Estación de metro San Javier", "Estación de metro cable San Javier"),  # Líneas B y J
+    # Conexiones entre Metro y Metro
+    ("Estación de metro San Antonio", "Estación de metro Cisneros"),  # Líneas A y B
     
-    # Conexiones con el Tranvía
-    ("Estación de metro San Antonio", "Estación de tranvia San Antonio"),  # Líneas A/B y TA
-    ("Estación de tranvia Oriente", "Estación de metro cable Oriente"),  # Líneas TA y H
+    # Conexiones con el Metro y Tranvía
+    ("Estación de metro San Antonio", "Estación de tranvia San José"),  # Líneas A/B y TA
+
+    # Conexiones con el Tranvia y Metrocable
+    ("Estación de tranvia Miraflores", "Estación de metro cable El Pinal"),  # TA y M
+    ("Estación de tranvia Oriente", "Estación de metro cable Las Torres"),  # TA y H
+
+    # Conexiones con el Metro y Metrocable
+    ("Estación de metro Acevedo", "Estación de metro cable Andalucía"),  # A y K
+    ("Estación de metro Acevedo", "Estación de metro cable Sena"),  # A y P 
+    ("Estación de metro San Javier", "Estación de metro cable Juan XXIII"),  # B y J
+
+    # Conexiones con el Metrocable y Metrocable
+    ("Estación de metro cable Santo Domingo", "Estación de metro cable Arví"),  # K y L
     
     # Conexiones entre Metro y Bus
-    ("Estación de metro Poblado", "Estación de bus El Poblado"),  # Metro A con Bus C2
-    ("Estación de metro Aguacatala", "Estación de bus Aguacatala"),  # Metro A con Bus C4
-    ("Estación de metro Envigado", "Estación de bus Envigado"),  # Metro A con Bus C4
-    ("Estación de metro Exposiciones", "Estación de bus Exposiciones"),  # Metro A con Bus C1
-    ("Estación de metro Floresta", "Estación de bus Floresta"),  # Metro B con Bus C3
-    ("Estación de metro Santa Lucía", "Estación de bus Santa Lucía"),  # Metro B con Bus C3
-    ("Estación de metro San Javier", "Estación de bus San Javier"),  # Metro B con Bus C3
-    ("Estación de metro Niquía", "Estación de bus Niquía"),  # Metro A con Bus C5
-    ("Estación de metro Madera", "Estación de bus Madera"),  # Metro A con Bus C5
+    ("Estación de metro Caribe", "Estación de bus Universal"),  # A y 0
+    ("Estación de metro Hospital", "Estación de bus Palos Verdes 1"),  # A y 1
+    ("Estación de metro Hospital", "Estación de bus Palos Verdes 2"),  # A y 2
+    ("Estación de metro Hospital", "Estación de bus U. de A"),  # A y 1
+    ("Estación de metro Cisneros", "Estación de bus Minorista"),  # B y 1
+    ("Estación de metro Cisneros", "Estación de bus Plaza Mayor"),  # B y 1
+    ("Estación de metro Floresta", "Estación de bus Calasanz"),  # B y 0
+    ("Estación de metro Floresta", "Estación de bus Los Pinos"),  # B y 0
+    ("Estación de metro Industriales", "Estación de bus Barrio Colombia"),  # A y 2
+    ("Estación de metro Industriales", "Estación de bus Plaza Mayor"),  # A y 1
+    ("Estación de metro Industriales", "Estación de bus Nutibara 1"),  # A y 1
+    ("Estación de metro Industriales", "Estación de bus Nutibara 2"),  # A y 2
+
+    # Conexiones entre Tranvia y Bus
+    ("Estación de tranvia San José", "Estación de bus La Playa"),  # TA y 2
+    ("Estación de tranvia San José", "Estación de bus Barrio Colón"),  # TA y 2
+
+    # Conexiones entre Bus y Bus
+    ("Estación de bus La Palma 1", "Estación de bus Villa de Aburrá"),  # 1 y 0
+    ("Estación de bus La Palma 2", "Estación de bus Villa de Aburrá"),  # 2 y 0
+    
 ]
 
 # Configuración visual para transbordos
@@ -95,7 +117,7 @@ METRO_LINES = {
             "Estación de metro San Antonio": [6.2472, -75.5697],
             "Estación de metro Cisneros": [6.2490, -75.5748],
             "Estación de metro Suramericana": [6.2530, -75.5829],
-            "Estación de metro Estadio": [6.2530, -75.5829],
+            "Estación de metro Estadio": [6.2536, -75.5900],
             "Estación de metro Floresta": [6.2586, -75.5977],
             "Estación de metro Santa Lucía": [6.2581, -75.6037],
             "Estación de metro San Javier": [6.2566, -75.6134]
@@ -114,7 +136,7 @@ METRO_LINES = {
         "stations": {
             "Estación de metro cable San Javier": [6.2566, -75.6134],
             "Estación de metro cable Juan XXIII": [6.2657, -75.6137],
-            "Estación de metro cable Vallejuelos": [6.2759, -75.6134],
+            "Estación de metro cable Vallejuelos": [6.2754, -75.6142],
             "Estación de metro cable La Aurora": [6.2810, -75.6143]
         }
     },
@@ -138,6 +160,7 @@ METRO_LINES = {
         "color": "#6f42c1",
         "stations": {
             "Estación de metro cable Miraflores": [6.2414, -75.5490],
+            "Estación de metro cable El Pinal": [6.2453, -75.5444],
             "Estación de metro cable Trece de Noviembre": [6.2454, -75.5441]
         }
     },
@@ -164,54 +187,74 @@ METRO_LINES = {
             "Estación de tranvia Oriente": [6.2332, -75.5402]
         }
     },
-        "C1": {
-        "color": "#FF5733",
+    "0" : {
+        "Color": "#FF5733",
         "stations": {
-            "Estación de bus Exposiciones": [6.2383, -75.5731],
-            "Estación de bus San Diego": [6.2345, -75.5720],
-            "Estación de bus Boston": [6.2401, -75.5645],
-            "Estación de bus Los Ángeles": [6.2432, -75.5589],
-            "Estación de bus El Salvador": [6.2440, -75.5532]
-        }
-    },
-    "C2": {
-        "color": "#33FF57",
-        "stations": {
-            "Estación de bus Industriales": [6.2299, -75.5756],
-            "Estación de bus Barrio Colombia": [6.2264, -75.5740],
-            "Estación de bus La Asomadera": [6.2305, -75.5678],
-            "Estación de bus Las Palmas": [6.2312, -75.5623],
-            "Estación de bus El Poblado": [6.2128, -75.5779]
-        }
-    },
-    "C3": {
-        "color": "#3357FF",
-        "stations": {
+            "Estación de bus La Palma": [6.2312, -75.6015],
+            "Estación de bus Villa de Aburrá": [6.2442, -75.5812],
+            "Estación de bus Santa Gema": [6.2397, -75.6029],
+            "Estación de bus Laureles": [6.2458, -75.6025],
+            "Estación de bus Los Pinos": [6.2549, -75.6098],
             "Estación de bus Floresta": [6.2586, -75.5977],
-            "Estación de bus Calasanz": [6.2603, -75.6031],
-            "Estación de bus La América": [6.2617, -75.6089],
-            "Estación de bus Santa Lucía": [6.2581, -75.6037],
-            "Estación de bus San Javier": [6.2566, -75.6134]
+            "Estación de bus Calasanz": [6.2636, -75.5979],
+            "Estación de bus Los colores": [6.2699, -75.5952],
+            "Estación de bus Facultad de Minas": [6.2738, -75.5921],
+            "Estación de bus Ciudadela Universitaria": [6.2730, -75.5885],
+            "Estación de bus Pilarica": [6.2711, -75.5862],
+            "Estación de bus Córdoba": [6.2744, -75.5784],
+            "Estación de bus Universal": [6.2769, -75.5731],
+            "Estación de bus Caribe": [6.2775, -75.5696],
         }
     },
-    "C4": {
-        "color": "#F0E68C",
+    "1" : {
+        "Color": "#33FF57",
         "stations": {
-            "Estación de bus Aguacatala": [6.1940, -75.5817],
-            "Estación de bus EAFIT": [6.1985, -75.5782],
-            "Estación de bus Santa María de Los Ángeles": [6.2023, -75.5756],
-            "Estación de bus La Frontera": [6.2048, -75.5709],
-            "Estación de bus Envigado": [6.1747, -75.5970]
+            "Estación de bus Parque Aranjuez 1": [6.2848, -75.5570],
+            "Estación de bus Berlín 1": [6.2823, -75.5576],
+            "Estación de bus Las Esmeraldas 1": [6.2805, -75.5553],
+            "Estación de bus Manrique 1": [6.2744, -75.5566],
+            "Estación de bus Gardel 1": [6.2697, -75.5569],
+            "Estación de bus Palos Verdes 1": [6.2624, -75.5572],
+            "Estación de bus Hospital": [6.2635, -75.5650],
+            "Estación de bus U. de A": [6.2654, -75.5706],
+            "Estación de bus Chagualo": [6.2607, -75.5770],
+            "Estación de bus Minorista": [6.2576, -75.5733],
+            "Estación de bus Cisneros ": [6.2525, -75.5845],
+            "Estación de bus Plaza Mayor": [6.2399, -75.5891],
+            "Estación de bus Industriales 1": [6.2339, -75.5814],
+            "Estación de bus Nutibara 1": [6.2356, -75.5869],
+            "Estación de bus Fátima 1": [6.2347, -75.5883],
+            "Estación de bus Rosales 1": [6.2333, -75.5949],
+            "Estación de bus Parque Belén 1": [6.2319, -75.6019],
+            "Estación de bus La Palma 1": [6.2310, -75.6010],
+            "Estación de bus Los Alpes 1": [6.2329, -75.6163],
+            "Estación de bus U. de M. 1": [6.2322, -75.6133],
         }
     },
-    "C5": {
-        "color": "#FF1493",
+    "2" : {
+        "Color": "#F0E68C",
         "stations": {
-            "Estación de bus Niquía": [6.3378, -75.5441],
-            "Estación de bus Barrio París": [6.3302, -75.5509],
-            "Estación de bus Bello Centro": [6.3299, -75.5536],
-            "Estación de bus Fabricato": [6.3250, -75.5560],
-            "Estación de bus Madera": [6.3159, -75.5553]
+            "Estación de bus Parque Aranjuez 2": [6.2848, -75.5570],
+            "Estación de bus Berlín 2": [6.2823, -75.5576],
+            "Estación de bus Las Esmeraldas 2": [6.2805, -75.5553],
+            "Estación de bus Manrique 2": [6.2744, -75.5566],
+            "Estación de bus Gardel 2": [6.2697, -75.5569],
+            "Estación de bus Palos Verdes 2": [6.2624, -75.5572],
+            "Estación de bus Prado": [6.2442, -75.5812],
+            "Estación de bus Catedral": [6.2442, -75.5812],
+            "Estación de bus La Playa": [6.2442, -75.5812],
+            "Estación de bus San José": [6.2442, -75.5812],
+            "Estación de bus Barrio Colón": [6.2442, -75.5812],
+            "Estación de bus Perpetuo Socorro ": [6.2442, -75.5812],
+            "Estación de bus Barrio Colombia": [6.2442, -75.5812],
+            "Estación de bus Industriales 2": [6.2339, -75.5814],
+            "Estación de bus Nutibara 2": [6.2356, -75.5869],
+            "Estación de bus Fátima 2": [6.2347, -75.5883],
+            "Estación de bus Rosales 2": [6.2333, -75.5949],
+            "Estación de bus Parque Belén 2": [6.2319, -75.6019],
+            "Estación de bus La Palma 2": [6.2310, -75.6010],
+            "Estación de bus Los Alpes 2": [6.2329, -75.6163],
+            "Estación de bus U. de M. 2": [6.2322, -75.6133],
         }
     }
 }

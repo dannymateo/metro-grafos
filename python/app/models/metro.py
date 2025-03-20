@@ -107,8 +107,8 @@ class MetroSystem:
             
             for i in range(len(stations) - 1):
                 station1, station2 = stations[i], stations[i + 1]
-                coords1 = self.get_station_coordinates(station1)
-                coords2 = self.get_station_coordinates(station2)
+                coords1 = self.get_station_coordinates(station1, line_id) # deberia ser get_station_coordinates(station1, line_id)?
+                coords2 = self.get_station_coordinates(station2, line_id) # deberia ser get_station_coordinates(station2, line_id)?
                 
                 if coords1 and coords2:
                     time = self.calculate_travel_time(station1, station2, line_id)
