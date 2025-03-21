@@ -188,7 +188,7 @@ METRO_LINES = {
         }
     },
     "0" : {
-        "Color": "#FF5733",
+        "color": "#FF5733",
         "stations": {
             "Estación de bus La Palma": [6.2312, -75.6015],
             "Estación de bus Villa de Aburrá": [6.2442, -75.5812],
@@ -207,7 +207,7 @@ METRO_LINES = {
         }
     },
     "1" : {
-        "Color": "#33FF57",
+        "color": "#33FF57",
         "stations": {
             "Estación de bus Parque Aranjuez 1": [6.2848, -75.5570],
             "Estación de bus Berlín 1": [6.2823, -75.5576],
@@ -232,7 +232,7 @@ METRO_LINES = {
         }
     },
     "2" : {
-        "Color": "#F0E68C",
+        "color": "#F0E68C",
         "stations": {
             "Estación de bus Parque Aranjuez 2": [6.2848, -75.5570],
             "Estación de bus Berlín 2": [6.2823, -75.5576],
