@@ -8,9 +8,9 @@ DEFAULT_COORDINATES = (6.2442, -75.5812)
 # Factores de velocidad según el clima
 WEATHER_SPEED_FACTORS = {
     "sunny": 1.0,      # Velocidad normal
-    "cloudy": 0.9,     # 10% más lento
-    "rainy": 0.75,     # 25% más lento
-    "stormy": 0.6      # 40% más lento
+    "cloudy": 0.7,     # 30% más lento
+    "rainy": 0.5,      # 50% más lento
+    "stormy": 0.3      # 70% más lento
 }
 
 # Velocidades promedio por tipo de transporte (km/h)
@@ -267,7 +267,12 @@ WEATHER_STATES = {
         "color": "#FFD700",
         "opacity": 0.4,
         "radius": 600,
-        "transitions": {"sunny": 0.7, "cloudy": 0.2, "rainy": 0.1, "stormy": 0},
+        "transitions": {
+            "sunny": 0.4,
+            "cloudy": 0.3,
+            "rainy": 0.2,
+            "stormy": 0.1
+        },
         "temp_range": (22, 30),
         "humidity_range": (30, 60),
         "visibility_range": (8, 10)
@@ -279,7 +284,12 @@ WEATHER_STATES = {
         "color": "#A9A9A9",
         "opacity": 0.5,
         "radius": 800,
-        "transitions": {"sunny": 0.2, "cloudy": 0.5, "rainy": 0.2, "stormy": 0.1},
+        "transitions": {
+            "sunny": 0.2,
+            "cloudy": 0.3,
+            "rainy": 0.3,
+            "stormy": 0.2
+        },
         "temp_range": (18, 25),
         "humidity_range": (50, 80),
         "visibility_range": (5, 8)
@@ -291,7 +301,12 @@ WEATHER_STATES = {
         "color": "#4682B4",
         "opacity": 0.6,
         "radius": 700,
-        "transitions": {"sunny": 0.1, "cloudy": 0.2, "rainy": 0.5, "stormy": 0.2},
+        "transitions": {
+            "sunny": 0.1,
+            "cloudy": 0.2,
+            "rainy": 0.4,
+            "stormy": 0.3
+        },
         "temp_range": (15, 22),
         "humidity_range": (70, 95),
         "visibility_range": (3, 6)
@@ -303,7 +318,12 @@ WEATHER_STATES = {
         "color": "#483D8B",
         "opacity": 0.7,
         "radius": 900,
-        "transitions": {"sunny": 0, "cloudy": 0.2, "rainy": 0.3, "stormy": 0.5},
+        "transitions": {
+            "sunny": 0.1,
+            "cloudy": 0.2,
+            "rainy": 0.3,
+            "stormy": 0.4
+        },
         "temp_range": (12, 20),
         "humidity_range": (80, 100),
         "visibility_range": (1, 4)

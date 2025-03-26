@@ -24,9 +24,12 @@ def generate_graph_visualization(metro_system):
     # Crear un grafo nuevo para la visualización
     G = metro_system.metro_graph.copy()
     
-    # Obtener posiciones para el layout usando las coordenadas reales
-    pos = {station: [get_station_coordinates(station)[1], get_station_coordinates(station)[0]] 
-           for station in G.nodes()}
+    # Crear un diccionario de posiciones único para cada estación
+    pos = {}
+    for line_info in METRO_LINES.values():
+        for station, coords in line_info["stations"].items():
+            if station not in pos:  # Solo agregar si no existe
+                pos[station] = [coords[1], coords[0]]
     
     # Dibujar las líneas del metro con diferentes colores
     for line_name, line_info in METRO_LINES.items():

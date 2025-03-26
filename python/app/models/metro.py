@@ -56,34 +56,76 @@ class MetroSystem:
             return 1.0
             
         distance = self.calculate_distance(coords1[0], coords1[1], coords2[0], coords2[1])
-        
-        # Obtener el tipo de transporte y su velocidad base desde la configuración
-        transport_type = LINE_TRANSPORT_TYPES.get(line, "metro")
-        base_speed = TRANSPORT_SPEEDS.get(transport_type, 35.0)
+        base_speed = TRANSPORT_SPEEDS[LINE_TRANSPORT_TYPES.get(line, "metro")]
 
         # Obtener condiciones climáticas de ambas estaciones
         weather1 = self.weather_conditions.get(station1, {'type': 'sunny'})
         weather2 = self.weather_conditions.get(station2, {'type': 'sunny'})
         
         # Usar el clima más severo entre las dos estaciones
-        weather1_type = weather1.get('type', 'sunny')
-        weather2_type = weather2.get('type', 'sunny')
+        weather_type1 = weather1.get('type', 'sunny')
+        weather_type2 = weather2.get('type', 'sunny')
         
-        # Añadir un poco de variabilidad a los factores del clima
-        weather_factor1 = WEATHER_SPEED_FACTORS.get(weather1_type, 1.0) * random.uniform(0.95, 1.05)
-        weather_factor2 = WEATHER_SPEED_FACTORS.get(weather2_type, 1.0) * random.uniform(0.95, 1.05)
+        # Factores base según el tipo de transporte
+        transport_type = LINE_TRANSPORT_TYPES.get(line, "metro")
         
-        # Usar el factor más bajo (peor clima)
-        weather_factor = min(weather_factor1, weather_factor2)
-        
-        # Añadir un poco de variabilidad al tiempo de viaje
-        adjusted_speed = base_speed * weather_factor
-        travel_time = (distance / adjusted_speed) * 60  # Convertir a minutos
-        
-        # Añadir un pequeño factor aleatorio para simular variabilidad en condiciones de tráfico
-        travel_time *= random.uniform(0.95, 1.05)
+        # Penalizaciones específicas por tipo de transporte
+        transport_penalties = {
+            "metro": {
+                "cloudy": 1.3,   # 30% más lento
+                "rainy": 1.8,    # 80% más lento
+                "stormy": 2.5    # 150% más lento
+            },
+            "cable": {
+                "cloudy": 1.5,   # 50% más lento
+                "rainy": 2.0,    # 100% más lento
+                "stormy": 3.0    # 200% más lento (o suspensión del servicio)
+            },
+            "tranvia": {
+                "cloudy": 1.4,   # 40% más lento
+                "rainy": 1.9,    # 90% más lento
+                "stormy": 2.7    # 170% más lento
+            },
+            "bus": {
+                "cloudy": 1.6,   # 60% más lento
+                "rainy": 2.2,    # 120% más lento
+                "stormy": 3.0    # 200% más lento
+            }
+        }
 
-        return max(travel_time, 0.5)
+        # Obtener el factor de penalización específico para este tipo de transporte y clima
+        weather_penalty1 = transport_penalties.get(transport_type, {}).get(weather_type1, 1.0)
+        weather_penalty2 = transport_penalties.get(transport_type, {}).get(weather_type2, 1.0)
+        
+        # Usar la penalización más alta
+        final_penalty = max(weather_penalty1, weather_penalty2)
+        
+        # Añadir variabilidad adicional basada en la intensidad del clima
+        weather_intensity = max(
+            weather1.get('intensity', 1.0),
+            weather2.get('intensity', 1.0)
+        )
+        
+        # El factor final combina la penalización base y la intensidad
+        final_weather_factor = final_penalty * weather_intensity
+        
+        # Calcular el tiempo base
+        base_time = (distance / base_speed) * 60  # Convertir a minutos
+        
+        # Aplicar el factor climático
+        weather_adjusted_time = base_time * final_weather_factor
+        
+        # Añadir penalizaciones adicionales por condiciones severas
+        if final_penalty > 2.0:  # Para climas muy severos
+            # Añadir tiempo extra para precauciones de seguridad
+            safety_delay = base_time * 0.3  # 30% del tiempo base adicional
+            weather_adjusted_time += safety_delay
+        
+        # Añadir variabilidad aleatoria (±10%)
+        final_time = weather_adjusted_time * random.uniform(0.9, 1.1)
+        
+        # Asegurar un tiempo mínimo razonable
+        return max(final_time, 1.0)
 
     def initialize_graph(self):
         """Inicializa el grafo del metro con la nueva estructura de datos"""
@@ -92,39 +134,36 @@ class MetroSystem:
         # Limpiar el grafo existente
         self.metro_graph.clear()
         
-        # Primero añadir todas las estaciones como nodos
-        for line_id, line_info in METRO_LINES.items():
-            logger.info(f"Añadiendo estaciones de la línea {line_id}")
-            for station in line_info["stations"].keys():
-                if station not in self.metro_graph:
-                    self.metro_graph.add_node(station)
-                    logger.debug(f"Añadido nodo: {station}")
+        # Primero agregar todos los nodos (estaciones) una sola vez
+        added_stations = set()
+        for line_name, line_info in METRO_LINES.items():
+            for station, coords in line_info["stations"].items():
+                if station not in added_stations:
+                    self.metro_graph.add_node(station, pos=coords)
+                    added_stations.add(station)
         
-        # Luego crear las conexiones dentro de cada línea
-        for line_id, line_info in METRO_LINES.items():
+        # Luego agregar las conexiones entre estaciones
+        for line_name, line_info in METRO_LINES.items():
             stations = list(line_info["stations"].keys())
-            logger.info(f"Creando conexiones para línea {line_id} ({len(stations)} estaciones)")
-            
+            # Crear conexiones entre estaciones consecutivas en la misma línea
             for i in range(len(stations) - 1):
-                station1, station2 = stations[i], stations[i + 1]
-                coords1 = self.get_station_coordinates(station1, line_id) # deberia ser get_station_coordinates(station1, line_id)?
-                coords2 = self.get_station_coordinates(station2, line_id) # deberia ser get_station_coordinates(station2, line_id)?
-                
-                if coords1 and coords2:
-                    time = self.calculate_travel_time(station1, station2, line_id)
-                    self.metro_graph.add_edge(
-                        station1,
-                        station2,
-                        line=line_id,
-                        color=line_info["color"],
-                        weight=time
-                    )
-                    logger.debug(f"Añadida conexión: {station1} -> {station2} (línea {line_id})")
-                else:
-                    logger.warning(f"No se pudo crear conexión entre {station1} y {station2}: coordenadas faltantes")
+                self.metro_graph.add_edge(
+                    stations[i], 
+                    stations[i + 1],
+                    line=line_name,
+                    color=line_info["color"],
+                    weight=1.0  # Peso inicial
+                )
         
-        # Añadir conexiones entre líneas (transbordos)
-        self._add_transfer_stations()
+        # Agregar conexiones de transbordo
+        for station1, station2 in TRANSFER_CONNECTIONS:
+            self.metro_graph.add_edge(
+                station1,
+                station2,
+                line=TRANSFER_VISUAL["line"],
+                color=TRANSFER_VISUAL["color"],
+                weight=TRANSFER_TIME
+            )
         
         # Verificar la conectividad del grafo
         if not nx.is_connected(self.metro_graph):
