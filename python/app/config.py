@@ -8,9 +8,9 @@ DEFAULT_COORDINATES = (6.2442, -75.5812)
 # Factores de velocidad según el clima
 WEATHER_SPEED_FACTORS = {
     "sunny": 1.0,      # Velocidad normal
-    "cloudy": 0.7,     # 30% más lento
-    "rainy": 0.5,      # 50% más lento
-    "stormy": 0.3      # 70% más lento
+    "cloudy": 0.9,     # 10% más lento
+    "rainy": 0.75,     # 25% más lento
+    "stormy": 0.6      # 40% más lento
 }
 
 # Velocidades promedio por tipo de transporte (km/h)
@@ -54,27 +54,25 @@ TRANSFER_CONNECTIONS = [
     ("Estación de metro cable Santo Domingo", "Estación de metro cable Arví"),  # K y L
     
     # Conexiones entre Metro y Bus
-    ("Estación de metro Caribe", "Estación de bus Universal"),  # A y 0
-    ("Estación de metro Hospital", "Estación de bus Palos Verdes 1"),  # A y 1
-    ("Estación de metro Hospital", "Estación de bus Palos Verdes 2"),  # A y 2
-    ("Estación de metro Hospital", "Estación de bus U. de A"),  # A y 1
-    ("Estación de metro Cisneros", "Estación de bus Minorista"),  # B y 1
-    ("Estación de metro Cisneros", "Estación de bus Plaza Mayor"),  # B y 1
-    ("Estación de metro Floresta", "Estación de bus Calasanz"),  # B y 0
-    ("Estación de metro Floresta", "Estación de bus Los Pinos"),  # B y 0
-    ("Estación de metro Industriales", "Estación de bus Barrio Colombia"),  # A y 2
-    ("Estación de metro Industriales", "Estación de bus Plaza Mayor"),  # A y 1
-    ("Estación de metro Industriales", "Estación de bus Nutibara 1"),  # A y 1
-    ("Estación de metro Industriales", "Estación de bus Nutibara 2"),  # A y 2
+    ("Estación de metro Caribe", "Estación de bus Caribe"),  # A y 0
+    ("Estación de metro Hospital", "Estación de bus Hospital"),  # A y 1
+    ("Estación de metro Cisneros", "Estación de bus Cisneros"),  # B y 1
+    ("Estación de metro Floresta", "Estación de bus Floresta"),  # B y 0
+    ("Estación de metro Industriales", "Estación de bus Industriales 1"),  # A y 1
+    ("Estación de metro Industriales", "Estación de bus Industriales 2"),  # A y 2
 
     # Conexiones entre Tranvia y Bus
-    ("Estación de tranvia San José", "Estación de bus La Playa"),  # TA y 2
-    ("Estación de tranvia San José", "Estación de bus Barrio Colón"),  # TA y 2
+    ("Estación de tranvia San José", "Estación de bus San José"),  # TA y 2
 
     # Conexiones entre Bus y Bus
     ("Estación de bus La Palma 1", "Estación de bus Villa de Aburrá"),  # 1 y 0
     ("Estación de bus La Palma 2", "Estación de bus Villa de Aburrá"),  # 2 y 0
-    
+    ("Estación de bus Villa de Aburrá", "Estación de bus La Palma 1"),  # 0 y 1
+    ("Estación de bus Villa de Aburrá", "Estación de bus La Palma 2"),  # 0 y 2
+    ("Estación de bus La Palma 1", "Estación de bus La Palma 2"),  # 1 y 2
+    ("Estación de bus La Palma 2", "Estación de bus La Palma 1"),  # 2 y 1
+    ("Estación Palo Verde 1", "Estación de bus Palos Verdes 2"),  # 1 y 2
+    ("Estación Industriales 1", "Estación de bus Industriales 2"),  # 1 y 2
 ]
 
 # Configuración visual para transbordos
@@ -190,71 +188,72 @@ METRO_LINES = {
     "0" : {
         "color": "#FF5733",
         "stations": {
-            "Estación de bus La Palma": [6.2312, -75.6015],
-            "Estación de bus Villa de Aburrá": [6.2442, -75.5812],
-            "Estación de bus Santa Gema": [6.2397, -75.6029],
-            "Estación de bus Laureles": [6.2458, -75.6025],
-            "Estación de bus Los Pinos": [6.2549, -75.6098],
-            "Estación de bus Floresta": [6.2586, -75.5977],
-            "Estación de bus Calasanz": [6.2636, -75.5979],
-            "Estación de bus Los colores": [6.2699, -75.5952],
-            "Estación de bus Facultad de Minas": [6.2738, -75.5921],
-            "Estación de bus Ciudadela Universitaria": [6.2730, -75.5885],
-            "Estación de bus Pilarica": [6.2711, -75.5862],
-            "Estación de bus Córdoba": [6.2744, -75.5784],
-            "Estación de bus Universal": [6.2769, -75.5731],
-            "Estación de bus Caribe": [6.2775, -75.5696],
+            "Estación de bus La Palma 1": [6.231143735603874, -75.60120211686286],
+            "Estación de bus La Palma 2": [6.231109241102167, -75.60116348399163],
+            "Estación de bus Villa de Aburrá": [6.235386926336392, -75.60220859986252],
+            "Estación de bus Santa Gema": [6.2400331754631075, -75.60291337486278],
+            "Estación de bus Laureles": [6.246021775520001, -75.6025198656445],
+            "Estación de bus Los Pinos": [6.254718266943481, -75.59884999251533],
+            "Estación de bus Floresta": [6.25885925792891, -75.59779347166828],
+            "Estación de bus Calasanz": [6.264576473135161, -75.59643105209695],
+            "Estación de bus Los colores": [6.270090354396566, -75.59532096904653],
+            "Estación de bus Facultad de Minas": [6.2721793615114825, -75.59373651427525],
+            "Estación de bus Ciudadela Universitaria": [6.273055615089159, -75.58756237741459],
+            "Estación de bus Pilarica": [6.273655344318279, -75.58259836345937],
+            "Estación de bus Córdoba": [6.273806369232593, -75.5783535625409],
+            "Estación de bus Universal": [6.275341170092774, -75.57402642081355],
+            "Estación de bus Caribe": [6.277514663177121, -75.57038484275131],
         }
     },
     "1" : {
         "color": "#33FF57",
         "stations": {
-            "Estación de bus Parque Aranjuez 1": [6.2848, -75.5570],
-            "Estación de bus Berlín 1": [6.2823, -75.5576],
-            "Estación de bus Las Esmeraldas 1": [6.2805, -75.5553],
-            "Estación de bus Manrique 1": [6.2744, -75.5566],
-            "Estación de bus Gardel 1": [6.2697, -75.5569],
-            "Estación de bus Palos Verdes 1": [6.2624, -75.5572],
-            "Estación de bus Hospital": [6.2635, -75.5650],
-            "Estación de bus U. de A": [6.2654, -75.5706],
-            "Estación de bus Chagualo": [6.2607, -75.5770],
-            "Estación de bus Minorista": [6.2576, -75.5733],
-            "Estación de bus Cisneros ": [6.2525, -75.5845],
-            "Estación de bus Plaza Mayor": [6.2399, -75.5891],
-            "Estación de bus Industriales 1": [6.2339, -75.5814],
-            "Estación de bus Nutibara 1": [6.2356, -75.5869],
-            "Estación de bus Fátima 1": [6.2347, -75.5883],
-            "Estación de bus Rosales 1": [6.2333, -75.5949],
-            "Estación de bus Parque Belén 1": [6.2319, -75.6019],
-            "Estación de bus La Palma 1": [6.2310, -75.6010],
-            "Estación de bus Los Alpes 1": [6.2329, -75.6163],
-            "Estación de bus U. de M. 1": [6.2322, -75.6133],
+            "Estación de bus Parque Aranjuez 1": [6.285196916883157, -75.55682397680636],
+            "Estación de bus Berlín 1": [6.283010316613288, -75.55308391430287],
+            "Estación de bus Las Esmeraldas 1": [6.278617662748495, -75.55316511441866],
+            "Estación de bus Manrique 1": [6.273092130323664, -75.55415542251787],
+            "Estación de bus Gardel 1": [6.268046559131081, -75.55501893956009],
+            "Estación de bus Palos Verdes 1": [6.262204408371649, -75.5559450174177],
+            "Estación de bus Hospital": [6.264035542951745, -75.56373169070037],
+            "Estación de bus U. de A": [6.264001888963568, -75.56761494224716],
+            "Estación de bus Chagualo": [6.260855754072381, -75.56910622702229],
+            "Estación de bus Minorista": [6.256120908271058, -75.57321998804991],
+            "Estación de bus Cisneros ": [6.250744864627717, -75.5750870509758],
+            "Estación de bus Plaza Mayor": [6.243643518963407, -75.57535344307288],
+            "Estación de bus Industriales 1": [6.230689025094534, -75.57665925741367],
+            "Estación de bus Nutibara 1": [6.231903797465869, -75.5820857522456],
+            "Estación de bus Fátima 1": [6.2318125648764315, -75.58660831173623],
+            "Estación de bus Rosales 1": [6.2316615162938405, -75.5909253327536],
+            "Estación de bus Parque Belén 1": [6.23143840520439, -75.59675297650546],
+            "Estación de bus La Palma 1": [6.231194854255559, -75.60093542030809],
+            "Estación de bus Los Alpes 1": [6.231134955275897, -75.60509067899916],
+            "Estación de bus U. de M. 1": [6.23108649282742, -75.60924200009467],
         }
     },
     "2" : {
         "color": "#F0E68C",
         "stations": {
-            "Estación de bus Parque Aranjuez 2": [6.2848, -75.5570],
-            "Estación de bus Berlín 2": [6.2823, -75.5576],
-            "Estación de bus Las Esmeraldas 2": [6.2805, -75.5553],
-            "Estación de bus Manrique 2": [6.2744, -75.5566],
-            "Estación de bus Gardel 2": [6.2697, -75.5569],
-            "Estación de bus Palos Verdes 2": [6.2624, -75.5572],
-            "Estación de bus Prado": [6.2442, -75.5812],
-            "Estación de bus Catedral": [6.2442, -75.5812],
-            "Estación de bus La Playa": [6.2442, -75.5812],
-            "Estación de bus San José": [6.2442, -75.5812],
-            "Estación de bus Barrio Colón": [6.2442, -75.5812],
-            "Estación de bus Perpetuo Socorro ": [6.2442, -75.5812],
-            "Estación de bus Barrio Colombia": [6.2442, -75.5812],
-            "Estación de bus Industriales 2": [6.2339, -75.5814],
-            "Estación de bus Nutibara 2": [6.2356, -75.5869],
-            "Estación de bus Fátima 2": [6.2347, -75.5883],
-            "Estación de bus Rosales 2": [6.2333, -75.5949],
-            "Estación de bus Parque Belén 2": [6.2319, -75.6019],
-            "Estación de bus La Palma 2": [6.2310, -75.6010],
-            "Estación de bus Los Alpes 2": [6.2329, -75.6163],
-            "Estación de bus U. de M. 2": [6.2322, -75.6133],
+            "Estación de bus Parque Aranjuez 2": [6.28521911058957, -75.55645078166778],
+            "Estación de bus Berlín 2": [6.282974446014115, -75.55282679186952],
+            "Estación de bus Las Esmeraldas 2": [6.2785891276210135, -75.5530391211881],
+            "Estación de bus Manrique 2": [6.273088131100277, -75.55410043723315],
+            "Estación de bus Gardel 2": [6.268031986281959, -75.55486444055407],
+            "Estación de bus Palos Verdes 2": [6.262034016202694, -75.55575330332263],
+            "Estación de bus Prado": [6.256986061526312, -75.5666672126181],
+            "Estación de bus Catedral": [6.2528287368789925, -75.56261442500056],
+            "Estación de bus La Playa": [6.249353624493189, -75.56459508648217],
+            "Estación de bus San José": [6.247240088697676, -75.56605097115695],
+            "Estación de bus Barrio Colón": [6.240530718884951, -75.56986261057031],
+            "Estación de bus Perpetuo Socorro ": [6.23400512224475, -75.57010377807885],
+            "Estación de bus Barrio Colombia": [6.22867315036066, -75.57095699731644],
+            "Estación de bus Industriales 2": [6.230124611652166, -75.57667201622114],
+            "Estación de bus Nutibara 2": [6.231733395432691, -75.58208349678578],
+            "Estación de bus Fátima 2": [6.231587434226688, -75.58658917352503],
+            "Estación de bus Rosales 2": [6.23150008271555, -75.59095465373126],
+            "Estación de bus Parque Belén 2": [6.231313482345413, -75.5967798535402],
+            "Estación de bus La Palma 2": [6.231109241102167, -75.60116348399163],
+            "Estación de bus Los Alpes 2": [6.231023969584785, -75.6051267663563],
+            "Estación de bus U. de M. 2": [6.230696406090166, -75.60934457804314],
         }
     }
 }
@@ -267,12 +266,7 @@ WEATHER_STATES = {
         "color": "#FFD700",
         "opacity": 0.4,
         "radius": 600,
-        "transitions": {
-            "sunny": 0.4,
-            "cloudy": 0.3,
-            "rainy": 0.2,
-            "stormy": 0.1
-        },
+        "transitions": {"sunny": 0.7, "cloudy": 0.2, "rainy": 0.1, "stormy": 0},
         "temp_range": (22, 30),
         "humidity_range": (30, 60),
         "visibility_range": (8, 10)
@@ -284,12 +278,7 @@ WEATHER_STATES = {
         "color": "#A9A9A9",
         "opacity": 0.5,
         "radius": 800,
-        "transitions": {
-            "sunny": 0.2,
-            "cloudy": 0.3,
-            "rainy": 0.3,
-            "stormy": 0.2
-        },
+        "transitions": {"sunny": 0.2, "cloudy": 0.5, "rainy": 0.2, "stormy": 0.1},
         "temp_range": (18, 25),
         "humidity_range": (50, 80),
         "visibility_range": (5, 8)
@@ -301,12 +290,7 @@ WEATHER_STATES = {
         "color": "#4682B4",
         "opacity": 0.6,
         "radius": 700,
-        "transitions": {
-            "sunny": 0.1,
-            "cloudy": 0.2,
-            "rainy": 0.4,
-            "stormy": 0.3
-        },
+        "transitions": {"sunny": 0.1, "cloudy": 0.2, "rainy": 0.5, "stormy": 0.2},
         "temp_range": (15, 22),
         "humidity_range": (70, 95),
         "visibility_range": (3, 6)
@@ -318,14 +302,9 @@ WEATHER_STATES = {
         "color": "#483D8B",
         "opacity": 0.7,
         "radius": 900,
-        "transitions": {
-            "sunny": 0.1,
-            "cloudy": 0.2,
-            "rainy": 0.3,
-            "stormy": 0.4
-        },
+        "transitions": {"sunny": 0, "cloudy": 0.2, "rainy": 0.3, "stormy": 0.5},
         "temp_range": (12, 20),
         "humidity_range": (80, 100),
         "visibility_range": (1, 4)
     }
-} 
+}
